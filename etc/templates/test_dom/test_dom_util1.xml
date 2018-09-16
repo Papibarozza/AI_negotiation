@@ -1,0 +1,28 @@
+<utility_space> 
+<objective name="test_dom" index="0" description="" etype="objective" type="objective"> 
+<issue vtype="discrete" name="banana" index="1" etype="discrete" type="discrete"> 
+<item evaluation="null" index="1" value="Blue"> 
+</item> 
+<item evaluation="null" index="2" value="Red"> 
+</item> 
+<item evaluation="null" index="3" value="Green"> 
+</item> 
+</issue> 
+<issue vtype="discrete" name="carcolor" index="2" etype="discrete" type="discrete"> 
+<item evaluation="null" index="1" value="Black"> 
+</item> 
+<item evaluation="null" index="2" value="Green"> 
+</item> 
+<item evaluation="null" index="3" value="Yellow"> 
+</item> 
+</issue> 
+<weight index="1" value="0.0"> 
+</weight> 
+<weight index="2" value="0.0"> 
+</weight> 
+</objective> 
+<discount_factor value="1.0"> 
+</discount_factor> 
+<reservation value="0.0"> 
+</reservation> 
+</utility_space> 

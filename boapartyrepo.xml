@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<boaPartiesList>
+    <boaparties partyName="SolidAgentK">
+        <properties/>
+        <biddingStrategy>
+            <item classpath="negotiator.boaframework.offeringstrategy.anac2010.AgentK_Offering"/>
+        </biddingStrategy>
+        <acceptanceStrategy>
+            <item classpath="negotiator.boaframework.acceptanceconditions.anac2010.AC_AgentK"/>
+        </acceptanceStrategy>
+        <opponentModel>
+            <item classpath="negotiator.boaframework.opponentmodel.AgentLGModel"/>
+        </opponentModel>
+        <omStrategy>
+            <item classpath="negotiator.boaframework.omstrategy.NTFTstrategy"/>
+        </omStrategy>
+    </boaparties>
+    <boaparties partyName="MyParty">
+        <properties/>
+        <biddingStrategy>
+            <item classpath="negotiator.boaframework.offeringstrategy.anac2012.AgentLG_Offering"/>
+        </biddingStrategy>
+        <acceptanceStrategy>
+            <parameters name="e" value="1.0"/>
+            <parameters name="k" value="1.0"/>
+            <item classpath="C:\Users\Arvid\workspace\IN4010\bin\boaexample\Group39_AS.class"/>
+        </acceptanceStrategy>
+        <opponentModel>
+            <item classpath="negotiator.boaframework.opponentmodel.AgentLGModel"/>
+        </opponentModel>
+        <omStrategy>
+            <item classpath="negotiator.boaframework.omstrategy.NTFTstrategy"/>
+        </omStrategy>
+    </boaparties>
+    <boaparties partyName="AgentK_39">
+        <properties/>
+        <biddingStrategy>
+            <item classpath="negotiator.boaframework.offeringstrategy.anac2010.AgentK_Offering"/>
+        </biddingStrategy>
+        <acceptanceStrategy>
+            <parameters name="e" value="1.0"/>
+            <parameters name="k" value="0.0"/>
+            <item classpath="C:\Users\Arvid\workspace\IN4010\bin\boaexample\Group39_AS.class"/>
+        </acceptanceStrategy>
+        <opponentModel>
+            <item classpath="negotiator.boaframework.opponentmodel.AgentLGModel"/>
+        </opponentModel>
+        <omStrategy>
+            <item classpath="negotiator.boaframework.omstrategy.NTFTstrategy"/>
+        </omStrategy>
+    </boaparties>
+</boaPartiesList>

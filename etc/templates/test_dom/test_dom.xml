@@ -1,0 +1,22 @@
+<negotiation_template> 
+<utility_space number_of_issues="2"> 
+<objective name="test_dom" index="0" description="" etype="objective" type="objective"> 
+<issue vtype="discrete" name="Banan" index="1" etype="discrete" type="discrete"> 
+<item index="1" value="Red 3"> 
+</item> 
+<item index="2" value="Yellow 10"> 
+</item> 
+<item index="3" value="Green 40"> 
+</item> 
+</issue> 
+<issue vtype="discrete" name="Car" index="2" etype="discrete" type="discrete"> 
+<item index="1" value="Black 100"> 
+</item> 
+<item index="2" value="White 60"> 
+</item> 
+<item index="3" value="Purple 20"> 
+</item> 
+</issue> 
+</objective> 
+</utility_space> 
+</negotiation_template> 
