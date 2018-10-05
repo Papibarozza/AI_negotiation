@@ -85,7 +85,7 @@ public class Group39_BS extends OfferingStrategy {
 
 	@Override
 	public String getName() {
-		return "Group39_BS_new";
+		return "Group39_BS";
 	}
 	
 
