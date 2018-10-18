@@ -42,7 +42,7 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 	private int learnValueAddition;
 	private int amountOfIssues;
 	private double goldenValue;
-
+	
 	@SuppressWarnings("deprecation")
 	@Override
 	public void init(NegotiationSession negotiationSession,
@@ -68,6 +68,7 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 
 	}
 
+	
 	@Override
 	public void updateModel(Bid opponentBid, double time) {
 		if (negotiationSession.getOpponentBidHistory().size() < 2) {
@@ -128,6 +129,8 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
+//		System.out.println("At time: " + negotiationSession.getTime() + " the basic opp model says: \n" + opponentUtilitySpace + "\n \n");
+
 	}
 
 	@Override
@@ -143,7 +146,7 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 
 	@Override
 	public String getName() {
-		return "HardHeaded Frequency Model";
+		return "Hardheaded frequency model";
 	}
 
 	@Override
@@ -204,5 +207,9 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 
 		return diff;
 	}
+
+
+
+	
 
 }

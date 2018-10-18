@@ -85,7 +85,7 @@ public class Group39_AS extends AcceptanceStrategy {
 	@Override
 	public Set<BOAparameter> getParameterSpec() {
 		Set<BOAparameter> set = new HashSet<BOAparameter>();
-		set.add(new BOAparameter("e", 1.0, "Concession rate"));
+		set.add(new BOAparameter("e", 0.1, "Concession rate"));
 		set.add(new BOAparameter("k", 0.0, "Offset"));
 
 		return set;
