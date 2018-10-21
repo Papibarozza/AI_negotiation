@@ -1,7 +1,10 @@
 package group39;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -42,9 +45,6 @@ public class Group39_OM extends OpponentModel {
 	private int learnValueAddition;
 	private int amountOfIssues;
 	private double goldenValue;
-	
-	private boolean doUpdate = true;
-	private boolean doSimpleUpdates = true;
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -67,28 +67,15 @@ public class Group39_OM extends OpponentModel {
 		 */
 		goldenValue = learnCoef / amountOfIssues;
 
-		System.out.println("Init at time: " + negotiationSession.getTime());
+//		System.out.println("Init at time: " + negotiationSession.getTime());
 		
 		initializeModel();
 
 	}
 
-	@Override
-	protected void updateModel(Bid bid, double time) {
-		if (! this.doUpdate || (negotiationSession.getTime() > 0.65)) {
-			System.out.println("No longer updating");
-			return;
-		}
-		if (this.doSimpleUpdates && negotiationSession.getTime()<0.2) {
-			this.earlyUpdateModel(bid,  time);
-		} else {
-			this.midUpdateModel(bid, time);
-		}
-		this.testPrecision();
-	}
 	
-//	The original frequency model update
-	public void earlyUpdateModel(Bid opponentBid, double time) {
+	@Override
+	public void updateModel(Bid opponentBid, double time) {
 		if (negotiationSession.getOpponentBidHistory().size() < 2) {
 			return;
 		}
@@ -99,8 +86,23 @@ public class Group39_OM extends OpponentModel {
 		BidDetails prevOppBid = negotiationSession.getOpponentBidHistory()
 				.getHistory()
 				.get(negotiationSession.getOpponentBidHistory().size() - 2);
-		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
-				oppBid);
+		List<BidDetails> bidList = new ArrayList<>();
+		bidList.add(oppBid);
+		bidList.add(prevOppBid);
+		if (negotiationSession.getOpponentBidHistory().size() > 3) {
+			BidDetails prevPrevOppBid = negotiationSession.getOpponentBidHistory()
+					.getHistory()
+					.get(negotiationSession.getOpponentBidHistory().size() - 3);
+			bidList.add(prevPrevOppBid);
+			
+			BidDetails prevPrevPrevOppBid = negotiationSession.getOpponentBidHistory()
+					.getHistory()
+					.get(negotiationSession.getOpponentBidHistory().size() - 4);
+			bidList.add(prevPrevPrevOppBid);
+		}
+//		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
+//				oppBid);
+		HashMap<Integer, Integer> lastDiffSet = determineMultipleDifference(bidList);
 
 		// count the number of changes in value
 		for (Integer i : lastDiffSet.keySet()) {
@@ -142,118 +144,15 @@ public class Group39_OM extends OpponentModel {
 				ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
 						.getValue(issue.getNumber());
 				Integer eval = value.getEvaluationNotNormalized(issuevalue);
-				
-				if (eval > 5) {
-					this.doSimpleUpdates = false;
-				}
-					
 					
 				value.setEvaluation(issuevalue, (learnValueAddition + eval));
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		if (! this.doSimpleUpdates) {
-			System.out.println("Done with simple update at time " + negotiationSession.getTime() + ": \n" + this.opponentUtilitySpace);
-		}
+		testPrecision();
 	}
 	
-	public void midUpdateModel(Bid opponentBid, double time) {
-		if (negotiationSession.getOpponentBidHistory().size() < 2) {
-			return;
-		}
-		
-		
-		BidDetails oppBid = negotiationSession.getOpponentBidHistory()
-				.getHistory()
-				.get(negotiationSession.getOpponentBidHistory().size() - 1);
-		BidDetails prevOppBid = negotiationSession.getOpponentBidHistory()
-				.getHistory()
-				.get(negotiationSession.getOpponentBidHistory().size() - 2);
-		BidDetails prevPrevOppBid = negotiationSession.getOpponentBidHistory()
-				.getHistory()
-				.get(negotiationSession.getOpponentBidHistory().size() - 3);
-		
-		
-		double myPrevUtil = prevOppBid.getMyUndiscountedUtil();
-		int newBidBetterOrWorse = betterOrWorse(oppBid.getMyUndiscountedUtil(), myPrevUtil);
-		
-		int numberOfUnchanged = 0;
-//		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
-//				oppBid);
-		HashMap<Integer, Integer> lastDiffSet = determineTripleDifference(oppBid,
-				prevOppBid, prevPrevOppBid);
-
-		// count the number of changes in value
-		for (Integer i : lastDiffSet.keySet()) {
-			if (lastDiffSet.get(i) == 0)
-				numberOfUnchanged++;
-		}
-
-		// The total sum of weights before normalization.
-		double totalSum = 1D + goldenValue * numberOfUnchanged;
-		// The maximum possible weight
-		double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
-
-		// re-weighing issues while making sure that the sum remains 1
-		for (Integer i : lastDiffSet.keySet()) {
-			Objective issue = opponentUtilitySpace.getDomain()
-					.getObjectivesRoot().getObjective(i);
-			double weight = opponentUtilitySpace.getWeight(i);
-			double newWeight;
-
-			if (lastDiffSet.get(i) == 0 && weight < maximumWeight) {
-				newWeight = (weight + goldenValue) / totalSum;
-			} else {
-				newWeight = weight / totalSum;
-			}
-			opponentUtilitySpace.setWeight(issue, newWeight);
-		}
-
-		// Then for each issue value that has been offered last time, a constant
-		// value is added to its corresponding ValueDiscrete.
-		try {
-			for (Entry<Objective, Evaluator> e : opponentUtilitySpace
-					.getEvaluators()) {
-				EvaluatorDiscrete value = (EvaluatorDiscrete) e.getValue();
-				IssueDiscrete issue = ((IssueDiscrete) e.getKey());
-				/*
-				 * add constant learnValueAddition to the current preference of
-				 * the value to make it more important
-				 */
-				
-//				The value to be changed depends on how the utility changed for us
-				ValueDiscrete issuevalue;
-				if (newBidBetterOrWorse == 0) {
-					continue;
-				} else if (newBidBetterOrWorse == 1) {
-					if (myPrevUtil < 0.75 && myPrevUtil > 0.63) {
-						issuevalue = (ValueDiscrete) prevOppBid.getBid()
-								.getValue(issue.getNumber());
-					
-					} else {
-						issuevalue = (ValueDiscrete) oppBid.getBid()
-								.getValue(issue.getNumber());
-					}
-				} else {
-					issuevalue = (ValueDiscrete) prevOppBid.getBid()
-							.getValue(issue.getNumber());
-				}
-				
-				Integer eval = value.getEvaluationNotNormalized(issuevalue);
-				
-//				TODO
-				if (eval < 20) {
-					value.setEvaluation(issuevalue, (learnValueAddition + eval));
-				}
-				
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-		
-		System.out.println("At time: " + negotiationSession.getTime() + " the opp model says: \n" + opponentUtilitySpace + "\n \n");
-	}
 
 	@Override
 	public double getBidEvaluation(Bid bid) {
@@ -331,29 +230,29 @@ public class Group39_OM extends OpponentModel {
 	}
 	
 	
-	private HashMap<Integer, Integer> determineTripleDifference(BidDetails first,
-			BidDetails second, BidDetails third) {
-
+	private HashMap<Integer, Integer> determineMultipleDifference(List<BidDetails> bids) {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
+		if (bids.size() < 2) {
+			return diff;
+		}
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
-				Value value1 = first.getBid().getValue(i.getNumber());
-				Value value2 = second.getBid().getValue(i.getNumber());
-				Value value3 = third.getBid().getValue(i.getNumber());
-				boolean firstEqualsSecond = value1.equals(value2) ? true : false;
-				boolean firstEqualsThird = value1.equals(value3) ? true : false;
-				
-				if (firstEqualsSecond) {
-					if (firstEqualsThird) {
-						diff.put(i.getNumber(), 1);
-					} else {
-						diff.put(i.getNumber(), 0);
+				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
+				Value prevBid = bids.get(1).getBid().getValue(i.getNumber());
+				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
+//				If there are more than 2 bids in the history
+//				Check if all values for issue i are the same
+//				If they are, set value to 1 => don't increment value
+				if (diff.get(i.getNumber())==0 && bids.size() > 2) {
+					for (int j = 2; j < bids.size(); j++) {
+						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
+						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
+						if (! val1.equals(val2)) {
+							break;
+						}
 					}
-				} else {
 					diff.put(i.getNumber(), 1);
 				}
-				
-//				diff.put(i.getNumber(), (value1.equals(value2)) ? 0 : 1);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -362,30 +261,12 @@ public class Group39_OM extends OpponentModel {
 		return diff;
 	}
 	
-//	Compares opponents previous bid with newest in regards to my utility
-//	Returns 1 if it is better, -1 if worse and 0 if about even
-	private double evenParameter = 0.05;
-	private int betterOrWorse(double newUtil, double oldUtil) {
-		
-		double diff = newUtil - oldUtil;
-		if (Math.abs(diff) < evenParameter) {
-//			System.out.println("Newbid is about the same");
-			return 0;
-		}
-		if (newUtil > oldUtil) {
-//			System.out.println("Newbid is better");
-			return 1;
-		}
-//		System.out.println("Newbid is worse");
-		return -1;
-	}
-	
 	
 	private void testPrecision() {
 		try {
 			Bid bestBid = opponentUtilitySpace.getMaxUtilityBid();
 			Bid testBid = new Bid(bestBid);
-			System.out.println("Test pre change: " + opponentUtilitySpace.getUtility(testBid));
+			System.out.println("Test pre change: " + getBidEvaluation(testBid));
 			ValueDiscrete food = new ValueDiscrete("Catering");
 			ValueDiscrete drink = new ValueDiscrete("Non-Alcoholic");
 			ValueDiscrete location = new ValueDiscrete("Your Dorm");
@@ -398,7 +279,7 @@ public class Group39_OM extends OpponentModel {
 			testBid = testBid.putValue(4, (Value) invi);
 			testBid = testBid.putValue(5, (Value) music);
 			testBid = testBid.putValue(6, (Value) clean);
-			System.out.println("Test: " + opponentUtilitySpace.getUtility(testBid));
+			System.out.println("Test: " + getBidEvaluation(testBid));
 //			Bid selfBestBid = negotiationSession.getMaxBidinDomain().getBid();
 //			System.out.println(negotiationSession.getUtilitySpace().getUtility(selfBestBid));
 //			System.out.println(opponentUtilitySpace.getUtility(selfBestBid));
