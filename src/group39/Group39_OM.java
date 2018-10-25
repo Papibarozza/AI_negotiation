@@ -45,6 +45,12 @@ public class Group39_OM extends OpponentModel {
 	private int learnValueAddition;
 	private int amountOfIssues;
 	private double goldenValue;
+	
+	private double learnCoefatStart;
+	private int learnValueAdditionStart;
+	private int numberBidChanges;
+	private int MaxUpdates;
+
 
 	@SuppressWarnings("deprecation")
 	@Override
@@ -56,7 +62,12 @@ public class Group39_OM extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
-		learnValueAddition = 1;
+		learnValueAddition = 20;
+		learnValueAdditionStart=learnValueAddition;
+		learnCoefatStart=learnCoef;
+		MaxUpdates=100;
+		numberBidChanges=0;
+		
 		opponentUtilitySpace = (AdditiveUtilitySpace) negotiationSession
 				.getUtilitySpace().copy();
 		amountOfIssues = opponentUtilitySpace.getDomain().getIssues().size();
@@ -106,51 +117,65 @@ public class Group39_OM extends OpponentModel {
 
 		// count the number of changes in value
 		for (Integer i : lastDiffSet.keySet()) {
-			if (lastDiffSet.get(i) == 0)
+			if (lastDiffSet.get(i) == 0){
 				numberOfUnchanged++;
-		}
-
-		// The total sum of weights before normalization.
-		double totalSum = 1D + goldenValue * numberOfUnchanged;
-		// The maximum possible weight
-		double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
-
-		// re-weighing issues while making sure that the sum remains 1
-		for (Integer i : lastDiffSet.keySet()) {
-			Objective issue = opponentUtilitySpace.getDomain()
-					.getObjectivesRoot().getObjective(i);
-			double weight = opponentUtilitySpace.getWeight(i);
-			double newWeight;
-
-			if (lastDiffSet.get(i) == 0 && weight < maximumWeight) {
-				newWeight = (weight + goldenValue) / totalSum;
-			} else {
-				newWeight = weight / totalSum;
+				
 			}
-			opponentUtilitySpace.setWeight(issue, newWeight);
 		}
+		
+		
 
-		// Then for each issue value that has been offered last time, a constant
-		// value is added to its corresponding ValueDiscrete.
-		try {
-			for (Entry<Objective, Evaluator> e : opponentUtilitySpace
-					.getEvaluators()) {
-				EvaluatorDiscrete value = (EvaluatorDiscrete) e.getValue();
-				IssueDiscrete issue = ((IssueDiscrete) e.getKey());
-				/*
-				 * add constant learnValueAddition to the current preference of
-				 * the value to make it more important
-				 */
-				ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
-						.getValue(issue.getNumber());
-				Integer eval = value.getEvaluationNotNormalized(issuevalue);
-					
-				value.setEvaluation(issuevalue, (learnValueAddition + eval));
+		
+		if(!(numberOfUnchanged==amountOfIssues) && numberBidChanges<MaxUpdates){
+			numberBidChanges++;
+			this.updateLearnValueAddition(); //update value
+			this.updateLearnCoef();
+			goldenValue=learnCoef/amountOfIssues;
+		
+		
+			// The total sum of weights before normalization.
+			double totalSum = 1D + goldenValue * numberOfUnchanged;
+			// The maximum possible weight
+			double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
+
+			// re-weighing issues while making sure that the sum remains 1
+			for (Integer i : lastDiffSet.keySet()) {
+				Objective issue = opponentUtilitySpace.getDomain()
+						.getObjectivesRoot().getObjective(i);
+				double weight = opponentUtilitySpace.getWeight(i);
+				double newWeight;
+
+				if (lastDiffSet.get(i) == 0 && weight < maximumWeight) {
+					newWeight = (weight + goldenValue) / totalSum;
+				} else {
+					newWeight = weight / totalSum;
+				}
+				opponentUtilitySpace.setWeight(issue, newWeight);
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
+
+			// Then for each issue value that has been offered last time, a constant
+			// value is added to its corresponding ValueDiscrete.
+			try {
+				for (Entry<Objective, Evaluator> e : opponentUtilitySpace
+						.getEvaluators()) {
+					EvaluatorDiscrete value = (EvaluatorDiscrete) e.getValue();
+					IssueDiscrete issue = ((IssueDiscrete) e.getKey());
+					/*
+					 * add constant learnValueAddition to the current preference of
+					 * the value to make it more important
+					 */
+					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
+							.getValue(issue.getNumber());
+					Integer eval = value.getEvaluationNotNormalized(issuevalue);
+
+					value.setEvaluation(issuevalue, (learnValueAddition + eval));
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+			testPrecision();
+			
 		}
-		testPrecision();
 	}
 	
 
@@ -248,10 +273,11 @@ public class Group39_OM extends OpponentModel {
 						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
 						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
 						if (! val1.equals(val2)) {
+							diff.put(i.getNumber(), 1); //Think you want this line to be here?
 							break;
 						}
 					}
-					diff.put(i.getNumber(), 1);
+					//diff.put(i.getNumber(), 1);
 				}
 			}
 		} catch (Exception ex) {
@@ -259,6 +285,29 @@ public class Group39_OM extends OpponentModel {
 		}
 
 		return diff;
+	}
+	
+	
+	//This function updates the parameter learnValueAddition. The value of decreases exponentially from
+	//learnValueAdditionStart to 1 when we have reached the maximum number of updates.
+	private void updateLearnValueAddition(){
+		double b=Math.log(1D*learnValueAdditionStart);
+		learnValueAddition=(int) Math.round(learnValueAdditionStart*Math.exp(-b*numberBidChanges/MaxUpdates));	
+	}
+
+	
+	//This function updates the parameter learnCoef. It decreases linear from the value learnCoefStart to the
+	//parameter c with respect to number of bidchanges.
+	private void updateLearnCoef() {
+		double c=0.1;
+		if(numberBidChanges>MaxUpdates) {
+//			learnCoef=0;
+			return;
+		}else {
+			if(c!=1 && MaxUpdates>0) {
+				learnCoef=1D*(1-numberBidChanges/(MaxUpdates/(1-c)))*learnCoefatStart;
+			}
+		}
 	}
 	
 	
