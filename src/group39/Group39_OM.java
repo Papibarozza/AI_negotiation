@@ -62,7 +62,10 @@ public class Group39_OM extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
-		learnValueAddition = 20;
+//		TODO: remove this comment
+//		Note: if this is too large it seems that some randomness in opponents early changes tips
+//			the changes in the wrong direction.
+		learnValueAddition = 5;
 		learnValueAdditionStart=learnValueAddition;
 		learnCoefatStart=learnCoef;
 		MaxUpdates=100;
@@ -97,9 +100,11 @@ public class Group39_OM extends OpponentModel {
 		BidDetails prevOppBid = negotiationSession.getOpponentBidHistory()
 				.getHistory()
 				.get(negotiationSession.getOpponentBidHistory().size() - 2);
+//		bidList is a collection of the opponents previous bids we are considering
 		List<BidDetails> bidList = new ArrayList<>();
 		bidList.add(oppBid);
 		bidList.add(prevOppBid);
+//		If the opponent has given 4 or more bids we consider the 4 last ones. I.e. add them to bidList
 		if (negotiationSession.getOpponentBidHistory().size() > 3) {
 			BidDetails prevPrevOppBid = negotiationSession.getOpponentBidHistory()
 					.getHistory()
@@ -113,6 +118,9 @@ public class Group39_OM extends OpponentModel {
 		}
 //		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
 //				oppBid);
+
+//		This is a hashmap of <IssueValue, changed>. Where changed is 0 or 1 depending on whether we want
+//		to give it more weight or not
 		HashMap<Integer, Integer> lastDiffSet = determineMultipleDifference(bidList);
 
 		// count the number of changes in value
@@ -164,11 +172,21 @@ public class Group39_OM extends OpponentModel {
 					 * add constant learnValueAddition to the current preference of
 					 * the value to make it more important
 					 */
-					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
-							.getValue(issue.getNumber());
-					Integer eval = value.getEvaluationNotNormalized(issuevalue);
+					
+//					If the same value has been 4 times in a row we don't increment
+					if (lastDiffSet.get(issue.getNumber()) == 0) {
+						ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
+								.getValue(issue.getNumber());
+						Integer eval = value.getEvaluationNotNormalized(issuevalue);
 
-					value.setEvaluation(issuevalue, (learnValueAddition + eval));
+						value.setEvaluation(issuevalue, (learnValueAddition + eval));
+					}
+					
+//					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
+//							.getValue(issue.getNumber());
+//					Integer eval = value.getEvaluationNotNormalized(issuevalue);
+//
+//					value.setEvaluation(issuevalue, (learnValueAddition + eval));
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
@@ -254,30 +272,45 @@ public class Group39_OM extends OpponentModel {
 		return diff;
 	}
 	
-	
+//	@param bids: a list of up to the 4 last bids the agent has received
+//	The method compares the bids issue by issue and returns a hashmap with <IssueNumber, 0 or 1>
+//	If we put a 0 we want to give more weight to that issue and increase the frequency count
+//		of the seen IssueValue
+//	If we set a 1 we do not want to update the weight and frequency count
+//	We put a 0 on an issue if: -The last two bids have the same value for the issue AND the last 4
+//								bids do NOT have the same value for the issue
+//	We do not want to increase the weight and frequency if the issue has had the same value 4 times
+//	because we want to avoid that specific value getting too large compared to the other values
 	private HashMap<Integer, Integer> determineMultipleDifference(List<BidDetails> bids) {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
-		if (bids.size() < 2) {
-			return diff;
-		}
+//		TODO: No need to check this because it is checked in updateModel()?
+//		if (bids.size() < 2) {
+//			return diff;
+//		}
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
 				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
 				Value prevBid = bids.get(1).getBid().getValue(i.getNumber());
+				
+//				If the last to bids were the same we set 0
 				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
 //				If there are more than 2 bids in the history
 //				Check if all values for issue i are the same
 //				If they are, set value to 1 => don't increment value
 				if (diff.get(i.getNumber())==0 && bids.size() > 2) {
+					boolean allSame = true;
 					for (int j = 2; j < bids.size(); j++) {
 						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
 						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
 						if (! val1.equals(val2)) {
-							diff.put(i.getNumber(), 1); //Think you want this line to be here?
+//							We found two unequal values so the 3/4 last bids has at least two different values for issue i
+							allSame = false;
 							break;
 						}
 					}
-					//diff.put(i.getNumber(), 1);
+					if (allSame) {
+						diff.put(i.getNumber(), 1);
+					}
 				}
 			}
 		} catch (Exception ex) {
@@ -311,11 +344,14 @@ public class Group39_OM extends OpponentModel {
 	}
 	
 	
+//	In utility profile 2 of the party domain the bid: testbid has utility 0.69
+//	Check what the agent thinks the utility of the bid is
+//	testbid2 should have utility 83, thus be better than testbid
 	private void testPrecision() {
 		try {
 			Bid bestBid = opponentUtilitySpace.getMaxUtilityBid();
 			Bid testBid = new Bid(bestBid);
-			System.out.println("Test pre change: " + getBidEvaluation(testBid));
+			
 			ValueDiscrete food = new ValueDiscrete("Catering");
 			ValueDiscrete drink = new ValueDiscrete("Non-Alcoholic");
 			ValueDiscrete location = new ValueDiscrete("Your Dorm");
@@ -328,7 +364,28 @@ public class Group39_OM extends OpponentModel {
 			testBid = testBid.putValue(4, (Value) invi);
 			testBid = testBid.putValue(5, (Value) music);
 			testBid = testBid.putValue(6, (Value) clean);
-			System.out.println("Test: " + getBidEvaluation(testBid));
+			
+			
+			Bid testBid2 = new Bid(bestBid);
+			ValueDiscrete food2 = new ValueDiscrete("Catering");
+			ValueDiscrete drink2 = new ValueDiscrete("Non-Alcoholic");
+			ValueDiscrete location2 = new ValueDiscrete("Party Room");
+			ValueDiscrete invi2 = new ValueDiscrete("Custom, Printed");
+			ValueDiscrete music2 = new ValueDiscrete("MP3");
+			ValueDiscrete clean2 = new ValueDiscrete("Water and Soap");
+			testBid2 = testBid2.putValue(1, (Value) food2);
+			testBid2 = testBid2.putValue(2, (Value) drink2);
+			testBid2 = testBid2.putValue(3, (Value) location2);
+			testBid2 = testBid2.putValue(4, (Value) invi2);
+			testBid2 = testBid2.putValue(5, (Value) music2);
+			testBid2 = testBid2.putValue(6, (Value) clean2);
+			
+			
+			System.out.println("Test 1: " + getBidEvaluation(testBid));
+			System.out.println("Test 2: " + getBidEvaluation(testBid2));
+			System.out.println("Difference 1: " + (0.69-getBidEvaluation(testBid)));
+			System.out.println("Difference 2: " + (0.83-getBidEvaluation(testBid2)));
+			
 //			Bid selfBestBid = negotiationSession.getMaxBidinDomain().getBid();
 //			System.out.println(negotiationSession.getUtilitySpace().getUtility(selfBestBid));
 //			System.out.println(opponentUtilitySpace.getUtility(selfBestBid));
