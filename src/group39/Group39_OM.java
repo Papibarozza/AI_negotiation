@@ -277,8 +277,12 @@ public class Group39_OM extends OpponentModel {
 	//This function updates the parameter learnValueAddition. The value of decreases exponentially from
 	//learnValueAdditionStart to 1 when we have reached the maximum number of updates.
 	private void updateLearnValueAddition(){
-		double b=Math.log(1D*learnValueAdditionStart);
-		learnValueAddition=(int) Math.round(learnValueAdditionStart*Math.exp(-b*numberBidChanges/MaxUpdates));	
+//		double b=Math.log(1D*learnValueAdditionStart);
+//		learnValueAddition=(int) Math.round(learnValueAdditionStart*Math.exp(-b*numberBidChanges/MaxUpdates));
+		if(numberBidChanges<MaxUpdates && learnValueAddition>0) {
+			double k=(double) (learnValueAddition-1)/learnValueAddition;
+			learnValueAddition=(int) Math.round(learnValueAdditionStart*(1-numberBidChanges/MaxUpdates*k));	
+		}
 	}
 
 	
