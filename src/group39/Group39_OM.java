@@ -62,9 +62,7 @@ public class Group39_OM extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
-//		TODO: remove this comment
-//		Note: if this is too large it seems that some randomness in opponents early changes tips
-//			the changes in the wrong direction.
+//		Test with 2,3 and 4 as well
 		learnValueAddition = 5;
 		learnValueAdditionStart=learnValueAddition;
 		learnCoefatStart=learnCoef;
@@ -116,66 +114,69 @@ public class Group39_OM extends OpponentModel {
 		}
 //		This is a hashmap of <IssueValue, changed>. Where changed is 0 or 1 depending on whether we want
 //		to give it more weight or not
-		HashMap<Integer, Integer> lastDiffSet = determineMultipleDifference(bidList);
+		HashMap<Integer, Integer> lastTwoDiffSet = determineLastTwoDifference(bidList);
+		HashMap<Integer, Integer> lastFourDiffSet = determineLastFourDifference(bidList);
 
 		// count the number of changes in value
-		for (Integer i : lastDiffSet.keySet()) {
-			if (lastDiffSet.get(i) == 0){
+		for (Integer i : lastTwoDiffSet.keySet()) {
+			if (lastTwoDiffSet.get(i) == 0){
 				numberOfUnchanged++;
 				
 			}
 		}
 		
-		if(!(numberOfUnchanged==amountOfIssues) && numberBidChanges<MaxUpdates){
-			numberBidChanges++;
-			this.updateLearnValueAddition(); //update value
-			this.updateLearnCoef();
-			goldenValue=learnCoef/amountOfIssues;
-		
-			// The total sum of weights before normalization.
-			double totalSum = 1D + goldenValue * numberOfUnchanged;
-			// The maximum possible weight
-			double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
 
-			// re-weighing issues while making sure that the sum remains 1
-			for (Integer i : lastDiffSet.keySet()) {
-				Objective issue = opponentUtilitySpace.getDomain()
-						.getObjectivesRoot().getObjective(i);
-				double weight = opponentUtilitySpace.getWeight(i);
-				double newWeight;
+			
+//		TODO: when should these two methods be called
+		numberBidChanges++;
+		this.updateLearnValueAddition(); //update value
+		this.updateLearnCoef();
+		goldenValue=learnCoef/amountOfIssues;
+	
+		// The total sum of weights before normalization.
+		double totalSum = 1D + goldenValue * numberOfUnchanged;
+		// The maximum possible weight
+		double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
 
-				if (lastDiffSet.get(i) == 0 && weight < maximumWeight) {
-					newWeight = (weight + goldenValue) / totalSum;
-				} else {
-					newWeight = weight / totalSum;
-				}
-				opponentUtilitySpace.setWeight(issue, newWeight);
+		// re-weighing issues while making sure that the sum remains 1
+		for (Integer i : lastTwoDiffSet.keySet()) {
+			Objective issue = opponentUtilitySpace.getDomain()
+					.getObjectivesRoot().getObjective(i);
+			double weight = opponentUtilitySpace.getWeight(i);
+			double newWeight;
+
+//				If the last two bids have the same value for issue i, we update
+			if (lastTwoDiffSet.get(i) == 0 && weight < maximumWeight) {
+				newWeight = (weight + goldenValue) / totalSum;
+			} else {
+				newWeight = weight / totalSum;
 			}
+			opponentUtilitySpace.setWeight(issue, newWeight);
+		}
 
-			// Then for each issue value that has been offered last time, a constant
-			// value is added to its corresponding ValueDiscrete.
-			try {
-				for (Entry<Objective, Evaluator> e : opponentUtilitySpace
-						.getEvaluators()) {
-					EvaluatorDiscrete value = (EvaluatorDiscrete) e.getValue();
-					IssueDiscrete issue = ((IssueDiscrete) e.getKey());
-					/*
-					 * add constant learnValueAddition to the current preference of
-					 * the value to make it more important
-					 */
-					
-//					If the same value has been 4 times in a row we don't increment
-					if (lastDiffSet.get(issue.getNumber()) == 0) {
-						ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
-								.getValue(issue.getNumber());
-						Integer eval = value.getEvaluationNotNormalized(issuevalue);
+		// Then for each issue value that has been offered last time, a constant
+		// value is added to its corresponding ValueDiscrete.
+		try {
+			for (Entry<Objective, Evaluator> e : opponentUtilitySpace
+					.getEvaluators()) {
+				EvaluatorDiscrete value = (EvaluatorDiscrete) e.getValue();
+				IssueDiscrete issue = ((IssueDiscrete) e.getKey());
+				/*
+				 * add constant learnValueAddition to the current preference of
+				 * the value to make it more important
+				 */
+				
+//					If the last 4 bids give at least 2 unique values for the issue, we increment
+				if (lastFourDiffSet.get(issue.getNumber()) == 1) {
+					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
+							.getValue(issue.getNumber());
+					Integer eval = value.getEvaluationNotNormalized(issuevalue);
 
-						value.setEvaluation(issuevalue, (learnValueAddition + eval));
-					}
+					value.setEvaluation(issuevalue, (learnValueAddition + eval));
 				}
-			} catch (Exception ex) {
-				ex.printStackTrace();
 			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 	
@@ -193,7 +194,7 @@ public class Group39_OM extends OpponentModel {
 
 	@Override
 	public String getName() {
-		return "Group39 OM";
+		return "Group39_OM";
 	}
 
 	@Override
@@ -227,18 +228,12 @@ public class Group39_OM extends OpponentModel {
 		}
 	}
 
-
-	
-//	@param bids: a list of up to the 4 last bids the agent has received
-//	The method compares the bids issue by issue and returns a hashmap with <IssueNumber, 0 or 1>
-//	If we put a 0 we want to give more weight to that issue and increase the frequency count
-//		of the seen IssueValue
-//	If we set a 1 we do not want to update the weight and frequency count
-//	We put a 0 on an issue if: -The last two bids have the same value for the issue AND the last 4
-//								bids do NOT have the same value for the issue
-//	We do not want to increase the weight and frequency if the issue has had the same value 4 times
-//	because we want to avoid that specific value getting too large compared to the other values
-	private HashMap<Integer, Integer> determineMultipleDifference(List<BidDetails> bids) {
+//	@param bids is a list of up to the last four bids offered by the opponent
+//	Description: Compare each IssueValue of the opponents last two bids
+//	Return: A hashmap with one entry for each issue, where the keys are the issue numbers
+// 	The value for each key is an integer 0 or 1. 0 means that the last two IssueValues were equal
+//	1 means that they were not equal.
+	private HashMap<Integer, Integer> determineLastTwoDifference(List<BidDetails> bids) {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
@@ -247,24 +242,6 @@ public class Group39_OM extends OpponentModel {
 				
 //				If the last to bids were the same we set 0
 				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
-//				If there are more than 2 bids in the history
-//				Check if all values for issue i are the same
-//				If they are, set value to 1 => don't increment value
-				if (diff.get(i.getNumber())==0 && bids.size() > 2) {
-					boolean allSame = true;
-					for (int j = 2; j < bids.size(); j++) {
-						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
-						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
-						if (! val1.equals(val2)) {
-//							We found two unequal values so the 3/4 last bids has at least two different values for issue i
-							allSame = false;
-							break;
-						}
-					}
-					if (allSame) {
-						diff.put(i.getNumber(), 1);
-					}
-				}
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -273,6 +250,45 @@ public class Group39_OM extends OpponentModel {
 		return diff;
 	}
 	
+//	@param bids is a list of up to the last four bids offered by the opponent
+//	Description: Compare each IssueValue of the opponents last four bids
+//	Return: A hashmap with one entry for each issue, where the keys are the issue numbers
+// 	The value for each key is an integer 0 or 1. 0 means that the last four IssueValues were all equal
+//	1 means that they were not all equal.
+	private HashMap<Integer, Integer> determineLastFourDifference(List<BidDetails> bids) {
+		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
+		try {
+			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
+//				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
+//				Value prevBid = bids.get(1).getBid().getValue(i.getNumber());
+//				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
+				if (bids.size() < 4) {
+					diff.put(i.getNumber(), 1);
+				} else {
+					boolean allSame = true;
+					for (int j = 1; j < bids.size(); j++) {
+						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
+						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
+						if (! val1.equals(val2)) {
+//							We found two unequal values so there are at least two unique values
+							allSame = false;
+							break;
+						}
+					}
+					if (allSame) {
+						diff.put(i.getNumber(), 0);
+					} else {
+						diff.put(i.getNumber(), 1);
+					}
+				}
+				
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return diff;
+	}	
 	
 	//This function updates the parameter learnValueAddition. The value of decreases exponentially from
 	//learnValueAdditionStart to 1 when we have reached the maximum number of updates.
