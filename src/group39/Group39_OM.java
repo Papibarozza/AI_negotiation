@@ -290,30 +290,18 @@ public class Group39_OM extends OpponentModel {
 		return diff;
 	}	
 	
-	//This function updates the parameter learnValueAddition. The value of decreases exponentially from
-	//learnValueAdditionStart to 1 when we have reached the maximum number of updates.
+	//This function updates the parameter learnValueAddition. The value of decreases linearly from
+	//learnValueAdditionStart to 1 when we have reached the end of the negotiation.
 	private void updateLearnValueAddition(){
-//		double b=Math.log(1D*learnValueAdditionStart);
-//		learnValueAddition=(int) Math.round(learnValueAdditionStart*Math.exp(-b*numberBidChanges/MaxUpdates));
-		if(numberBidChanges<MaxUpdates && learnValueAddition>0) {
-			double k=(double) (learnValueAddition-1)/learnValueAddition;
-			learnValueAddition=(int) Math.round(learnValueAdditionStart*(1-numberBidChanges/MaxUpdates*k));	
-		}
+		double t=negotiationSession.getTime();
+		learnValueAddition=(int)Math.round(learnValueAdditionStart-(learnValueAddition-1)*t);
 	}
-
 	
-	//This function updates the parameter learnCoef. It decreases linear from the value learnCoefStart to the
-	//parameter c with respect to number of bidchanges.
+	//This function updates the parameter learnCoef. It decreases linearly from the value learnCoefStart to the
+	//parameter c with respect to time.
 	private void updateLearnCoef() {
-		double c=0.1;
-		if(numberBidChanges>MaxUpdates) {
-//			learnCoef=0;
-			return;
-		}else {
-			if(c!=1 && MaxUpdates>0) {
-				learnCoef=1D*(1-numberBidChanges/(MaxUpdates/(1-c)))*learnCoefatStart;
-			}
-		}
+		double t=negotiationSession.getTime();
+		learnCoef=learnCoefatStart-(learnCoefatStart-0.1)*t;
 	}
 
 }
