@@ -80,8 +80,6 @@ public class Group39_OM extends OpponentModel {
 		 * weight, (therefore defining the maximum possible also).
 		 */
 		goldenValue = learnCoef / amountOfIssues;
-
-//		System.out.println("Init at time: " + negotiationSession.getTime());
 		
 		initializeModel();
 
@@ -116,9 +114,6 @@ public class Group39_OM extends OpponentModel {
 					.get(negotiationSession.getOpponentBidHistory().size() - 4);
 			bidList.add(prevPrevPrevOppBid);
 		}
-//		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
-//				oppBid);
-
 //		This is a hashmap of <IssueValue, changed>. Where changed is 0 or 1 depending on whether we want
 //		to give it more weight or not
 		HashMap<Integer, Integer> lastDiffSet = determineMultipleDifference(bidList);
@@ -131,15 +126,11 @@ public class Group39_OM extends OpponentModel {
 			}
 		}
 		
-		
-
-		
 		if(!(numberOfUnchanged==amountOfIssues) && numberBidChanges<MaxUpdates){
 			numberBidChanges++;
 			this.updateLearnValueAddition(); //update value
 			this.updateLearnCoef();
 			goldenValue=learnCoef/amountOfIssues;
-		
 		
 			// The total sum of weights before normalization.
 			double totalSum = 1D + goldenValue * numberOfUnchanged;
@@ -181,18 +172,10 @@ public class Group39_OM extends OpponentModel {
 
 						value.setEvaluation(issuevalue, (learnValueAddition + eval));
 					}
-					
-//					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
-//							.getValue(issue.getNumber());
-//					Integer eval = value.getEvaluationNotNormalized(issuevalue);
-//
-//					value.setEvaluation(issuevalue, (learnValueAddition + eval));
 				}
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
-			testPrecision();
-			
 		}
 	}
 	
@@ -244,33 +227,7 @@ public class Group39_OM extends OpponentModel {
 		}
 	}
 
-	/**
-	 * Determines the difference between bids. For each issue, it is determined
-	 * if the value changed. If this is the case, a 1 is stored in a hashmap for
-	 * that issue, else a 0.
-	 * 
-	 * @param a
-	 *            bid of the opponent
-	 * @param another
-	 *            bid
-	 * @return
-	 */
-	private HashMap<Integer, Integer> determineDifference(BidDetails first,
-			BidDetails second) {
 
-		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
-		try {
-			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
-				Value value1 = first.getBid().getValue(i.getNumber());
-				Value value2 = second.getBid().getValue(i.getNumber());
-				diff.put(i.getNumber(), (value1.equals(value2)) ? 0 : 1);
-			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		}
-
-		return diff;
-	}
 	
 //	@param bids: a list of up to the 4 last bids the agent has received
 //	The method compares the bids issue by issue and returns a hashmap with <IssueNumber, 0 or 1>
@@ -283,10 +240,6 @@ public class Group39_OM extends OpponentModel {
 //	because we want to avoid that specific value getting too large compared to the other values
 	private HashMap<Integer, Integer> determineMultipleDifference(List<BidDetails> bids) {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
-//		TODO: No need to check this because it is checked in updateModel()?
-//		if (bids.size() < 2) {
-//			return diff;
-//		}
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
 				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
