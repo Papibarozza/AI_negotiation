@@ -250,9 +250,6 @@ public class Group39_OM extends OpponentModel {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
-//				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
-//				Value prevBid = bids.get(1).getBid().getValue(i.getNumber());
-//				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
 				if (bids.size() < 4) {
 					diff.put(i.getNumber(), 1);
 				} else {
