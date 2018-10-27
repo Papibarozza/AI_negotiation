@@ -48,8 +48,6 @@ public class Group39_OM extends OpponentModel {
 	
 	private double learnCoefatStart;
 	private int learnValueAdditionStart;
-	private int numberBidChanges;
-	private int MaxUpdates;
 
 
 	@SuppressWarnings("deprecation")
@@ -62,12 +60,9 @@ public class Group39_OM extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
-//		Test with 2,3 and 4 as well
 		learnValueAddition = 5;
 		learnValueAdditionStart=learnValueAddition;
 		learnCoefatStart=learnCoef;
-		MaxUpdates=100;
-		numberBidChanges=0;
 		
 		opponentUtilitySpace = (AdditiveUtilitySpace) negotiationSession
 				.getUtilitySpace().copy();
@@ -125,10 +120,6 @@ public class Group39_OM extends OpponentModel {
 			}
 		}
 		
-
-			
-//		TODO: when should these two methods be called
-		numberBidChanges++;
 		this.updateLearnValueAddition(); //update value
 		this.updateLearnCoef();
 		goldenValue=learnCoef/amountOfIssues;
