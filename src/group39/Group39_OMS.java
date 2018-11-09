@@ -1,4 +1,4 @@
-package ai2018.group39;
+package group39;
 
 import java.util.List;
 import java.util.Map;
