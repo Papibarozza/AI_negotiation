@@ -1,7 +1,10 @@
-package boaexample;
+package group39;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -27,7 +30,7 @@ import genius.core.utility.EvaluatorDiscrete;
  * 
  * paper: https://ii.tudelft.nl/sites/default/files/boa.pdf
  */
-public class HardHeadedFrequencyModel extends OpponentModel {
+public class Group39_OM extends OpponentModel {
 
 	/*
 	 * the learning coefficient is the weight that is added each turn to the
@@ -43,6 +46,10 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 	private int amountOfIssues;
 	private double goldenValue;
 	
+	private double learnCoefatStart;
+	private int learnValueAdditionStart;
+
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public void init(NegotiationSession negotiationSession,
@@ -53,7 +60,10 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
-		learnValueAddition = 1;
+		learnValueAddition = 5;
+		learnValueAdditionStart=learnValueAddition;
+		learnCoefatStart=learnCoef;
+		
 		opponentUtilitySpace = (AdditiveUtilitySpace) negotiationSession
 				.getUtilitySpace().copy();
 		amountOfIssues = opponentUtilitySpace.getDomain().getIssues().size();
@@ -63,7 +73,7 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 		 * weight, (therefore defining the maximum possible also).
 		 */
 		goldenValue = learnCoef / amountOfIssues;
-
+		
 		initializeModel();
 
 	}
@@ -81,28 +91,53 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 		BidDetails prevOppBid = negotiationSession.getOpponentBidHistory()
 				.getHistory()
 				.get(negotiationSession.getOpponentBidHistory().size() - 2);
-		HashMap<Integer, Integer> lastDiffSet = determineDifference(prevOppBid,
-				oppBid);
+//		bidList is a collection of the opponents previous bids we are considering
+		List<BidDetails> bidList = new ArrayList<>();
+		bidList.add(oppBid);
+		bidList.add(prevOppBid);
+//		If the opponent has given 4 or more bids we consider the 4 last ones. I.e. add them to bidList
+		if (negotiationSession.getOpponentBidHistory().size() > 3) {
+			BidDetails prevPrevOppBid = negotiationSession.getOpponentBidHistory()
+					.getHistory()
+					.get(negotiationSession.getOpponentBidHistory().size() - 3);
+			bidList.add(prevPrevOppBid);
+			
+			BidDetails prevPrevPrevOppBid = negotiationSession.getOpponentBidHistory()
+					.getHistory()
+					.get(negotiationSession.getOpponentBidHistory().size() - 4);
+			bidList.add(prevPrevPrevOppBid);
+		}
+//		This is a hashmap of <IssueValue, changed>. Where changed is 0 or 1 depending on whether we want
+//		to give it more weight or not
+		HashMap<Integer, Integer> lastTwoDiffSet = determineLastTwoDifference(bidList);
+		HashMap<Integer, Integer> lastFourDiffSet = determineLastFourDifference(bidList);
 
 		// count the number of changes in value
-		for (Integer i : lastDiffSet.keySet()) {
-			if (lastDiffSet.get(i) == 0)
+		for (Integer i : lastTwoDiffSet.keySet()) {
+			if (lastTwoDiffSet.get(i) == 0){
 				numberOfUnchanged++;
+				
+			}
 		}
-
+		
+		this.updateLearnValueAddition(); //update value
+		this.updateLearnCoef();
+		goldenValue=learnCoef/amountOfIssues;
+	
 		// The total sum of weights before normalization.
 		double totalSum = 1D + goldenValue * numberOfUnchanged;
 		// The maximum possible weight
 		double maximumWeight = 1D - (amountOfIssues) * goldenValue / totalSum;
 
 		// re-weighing issues while making sure that the sum remains 1
-		for (Integer i : lastDiffSet.keySet()) {
+		for (Integer i : lastTwoDiffSet.keySet()) {
 			Objective issue = opponentUtilitySpace.getDomain()
 					.getObjectivesRoot().getObjective(i);
 			double weight = opponentUtilitySpace.getWeight(i);
 			double newWeight;
 
-			if (lastDiffSet.get(i) == 0 && weight < maximumWeight) {
+//				If the last two bids have the same value for issue i, we update
+			if (lastTwoDiffSet.get(i) == 0 && weight < maximumWeight) {
 				newWeight = (weight + goldenValue) / totalSum;
 			} else {
 				newWeight = weight / totalSum;
@@ -121,17 +156,21 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 				 * add constant learnValueAddition to the current preference of
 				 * the value to make it more important
 				 */
-				ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
-						.getValue(issue.getNumber());
-				Integer eval = value.getEvaluationNotNormalized(issuevalue);
-				value.setEvaluation(issuevalue, (learnValueAddition + eval));
+				
+//					If the last 4 bids give at least 2 unique values for the issue, we increment
+				if (lastFourDiffSet.get(issue.getNumber()) == 1) {
+					ValueDiscrete issuevalue = (ValueDiscrete) oppBid.getBid()
+							.getValue(issue.getNumber());
+					Integer eval = value.getEvaluationNotNormalized(issuevalue);
+
+					value.setEvaluation(issuevalue, (learnValueAddition + eval));
+				}
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-//		System.out.println("At time: " + negotiationSession.getTime() + " the basic opp model says: \n" + opponentUtilitySpace + "\n \n");
-
 	}
+	
 
 	@Override
 	public double getBidEvaluation(Bid bid) {
@@ -146,7 +185,7 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 
 	@Override
 	public String getName() {
-		return "Hardheaded frequency model";
+		return "Group39_OM";
 	}
 
 	@Override
@@ -180,26 +219,20 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 		}
 	}
 
-	/**
-	 * Determines the difference between bids. For each issue, it is determined
-	 * if the value changed. If this is the case, a 1 is stored in a hashmap for
-	 * that issue, else a 0.
-	 * 
-	 * @param a
-	 *            bid of the opponent
-	 * @param another
-	 *            bid
-	 * @return
-	 */
-	private HashMap<Integer, Integer> determineDifference(BidDetails first,
-			BidDetails second) {
-
+//	@param bids is a list of up to the last four bids offered by the opponent
+//	Description: Compare each IssueValue of the opponents last two bids
+//	Return: A hashmap with one entry for each issue, where the keys are the issue numbers
+// 	The value for each key is an integer 0 or 1. 0 means that the last two IssueValues were equal
+//	1 means that they were not equal.
+	private HashMap<Integer, Integer> determineLastTwoDifference(List<BidDetails> bids) {
 		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
 		try {
 			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
-				Value value1 = first.getBid().getValue(i.getNumber());
-				Value value2 = second.getBid().getValue(i.getNumber());
-				diff.put(i.getNumber(), (value1.equals(value2)) ? 0 : 1);
+				Value lastBid = bids.get(0).getBid().getValue(i.getNumber());
+				Value prevBid = bids.get(1).getBid().getValue(i.getNumber());
+				
+//				If the last to bids were the same we set 0
+				diff.put(i.getNumber(), (lastBid.equals(prevBid)) ? 0 : 1);
 			}
 		} catch (Exception ex) {
 			ex.printStackTrace();
@@ -207,9 +240,56 @@ public class HardHeadedFrequencyModel extends OpponentModel {
 
 		return diff;
 	}
-
-
-
 	
+//	@param bids is a list of up to the last four bids offered by the opponent
+//	Description: Compare each IssueValue of the opponents last four bids
+//	Return: A hashmap with one entry for each issue, where the keys are the issue numbers
+// 	The value for each key is an integer 0 or 1. 0 means that the last four IssueValues were all equal
+//	1 means that they were not all equal.
+	private HashMap<Integer, Integer> determineLastFourDifference(List<BidDetails> bids) {
+		HashMap<Integer, Integer> diff = new HashMap<Integer, Integer>();
+		try {
+			for (Issue i : opponentUtilitySpace.getDomain().getIssues()) {
+				if (bids.size() < 4) {
+					diff.put(i.getNumber(), 1);
+				} else {
+					boolean allSame = true;
+					for (int j = 1; j < bids.size(); j++) {
+						Value val1 = bids.get(j-1).getBid().getValue(i.getNumber());
+						Value val2 = bids.get(j).getBid().getValue(i.getNumber());
+						if (! val1.equals(val2)) {
+//							We found two unequal values so there are at least two unique values
+							allSame = false;
+							break;
+						}
+					}
+					if (allSame) {
+						diff.put(i.getNumber(), 0);
+					} else {
+						diff.put(i.getNumber(), 1);
+					}
+				}
+				
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return diff;
+	}	
+	
+	//This function updates the parameter learnValueAddition. The value of decreases linearly from
+	//learnValueAdditionStart to 1 when we have reached the end of the negotiation.
+	private void updateLearnValueAddition(){
+		double t=negotiationSession.getTime();
+		learnValueAddition=(int)Math.round(learnValueAdditionStart-(learnValueAddition-1)*t);
+	}
+	
+	//This function updates the parameter learnCoef. It decreases linearly from the value learnCoefStart to the
+	//parameter c with respect to time.
+	private void updateLearnCoef() {
+		double t=negotiationSession.getTime();
+		learnCoef=learnCoefatStart-(learnCoefatStart-0.1)*t;
+	}
 
 }
