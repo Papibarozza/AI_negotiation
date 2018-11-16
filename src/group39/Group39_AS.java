@@ -22,7 +22,7 @@ public class Group39_AS extends AcceptanceStrategy {
 	private double e;
 	/** Outcome space */
 	private SortedOutcomeSpace outcomespace;
-	private Double reservationValue;
+	private Double minAcceptanceValue;
 	
 	public Group39_AS() {
 		
@@ -43,13 +43,13 @@ public class Group39_AS extends AcceptanceStrategy {
 		double myNextBidUtil = offeringStrategy.getNextBid().getMyUndiscountedUtil();
 		double minUtility = negotiationSession.getMinBidinDomain().getMyUndiscountedUtil();
 		double maxUtility = negotiationSession.getMaxBidinDomain().getMyUndiscountedUtil();
-		double reservationValue = this.reservationValue;
+		double minAcceptanceValue = this.minAcceptanceValue;
 		double P = minUtility + (1-f(t))*(maxUtility-minUtility);
 		
-		if(myNextBidUtil < lastOpponentBidUtil){
+		if(myNextBidUtil < lastOpponentBidUtil && lastOpponentBidUtil > minAcceptanceValue){
 			return Actions.Accept;
 		}
-		if(lastOpponentBidUtil >= P && lastOpponentBidUtil > reservationValue){
+		if(lastOpponentBidUtil >= P && lastOpponentBidUtil > minAcceptanceValue){
 			return Actions.Accept;
 		}else{
 			return Actions.Reject;
@@ -78,10 +78,10 @@ public class Group39_AS extends AcceptanceStrategy {
 			this.e = parameters.get("e");
 		else
 			this.e = 1;
-		if (parameters.get("rv") != null)
-			this.reservationValue = parameters.get("rv");
+		if (parameters.get("mav") != null)
+			this.minAcceptanceValue = parameters.get("mav");
 		else
-			this.reservationValue = 0.5;
+			this.minAcceptanceValue = 0.5;
 
 
 	}
@@ -97,7 +97,7 @@ public class Group39_AS extends AcceptanceStrategy {
 		Set<BOAparameter> set = new HashSet<BOAparameter>();
 		set.add(new BOAparameter("e", 0.1, "Concession rate"));
 		set.add(new BOAparameter("k", 0.0, "Offset"));
-		set.add(new BOAparameter("rv", 0.5, "Reservation Value"));
+		set.add(new BOAparameter("mav", 0.5, "Min Acceptance Value"));
 
 		return set;
 	}
