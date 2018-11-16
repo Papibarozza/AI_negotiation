@@ -2,7 +2,6 @@
 <repository fileName="boarepository.xml">
 	<biddingstrategies>
 		<biddingstrategy description="2010 - Agent K" classpath="negotiator.boaframework.offeringstrategy.anac2010.AgentK_Offering"/>
-		<biddingstrategy description="Group39_BS.class" classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_BS.class"/>
 		<biddingstrategy description="2010 - Yushu" classpath="negotiator.boaframework.offeringstrategy.anac2010.Yushu_Offering"/>
 		<biddingstrategy description="2012 - AgentLG" classpath="negotiator.boaframework.offeringstrategy.anac2012.AgentLG_Offering"/>
 		<biddingstrategy description="2012 - BRAMAgent2" classpath="negotiator.boaframework.offeringstrategy.anac2012.BRAMAgent2_Offering"/>
@@ -36,7 +35,7 @@
 	<acceptanceconditions>
 		<acceptancecondition description="2010 - Agent K" classpath="negotiator.boaframework.acceptanceconditions.anac2010.AC_AgentK"/>
 		<acceptancecondition description="2010 - Yushu" classpath="negotiator.boaframework.acceptanceconditions.anac2010.AC_Yushu"/>
-		<acceptancecondition description="Group39_AS.class" classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_AS.class"/>
+		<acceptancecondition description="Group39_AS.class" classpath="C:\Users\Arvid\workspace\IN4010\bin\group39\Group39_AS.class"/>
 		<acceptancecondition description="2012 - AgentLG" classpath="negotiator.boaframework.acceptanceconditions.anac2012.AC_AgentLG"/>
 		<acceptancecondition description="2012 - BRAMAgent2" classpath="negotiator.boaframework.acceptanceconditions.anac2012.AC_BRAMAgent2"/>
 		<acceptancecondition description="2012 - The Negotiator Reloaded" classpath="negotiator.boaframework.acceptanceconditions.anac2012.AC_TheNegotiatorReloaded"/>
@@ -79,7 +78,6 @@
 		<opponentmodel description="The Negotiator Reloaded Model" classpath="negotiator.boaframework.opponentmodel.IAMhagglerBayesianModel"/>
 		<opponentmodel description="InoxAgent_OM" classpath="negotiator.boaframework.opponentmodel.InoxAgent_OM"/>
 		<opponentmodel description="FSEGA Bayesian Model" classpath="negotiator.boaframework.opponentmodel.FSEGABayesianModel"/>
-		<opponentmodel description="HardHeadedFrequencyModel.class" classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\boaexample\HardHeadedFrequencyModel.class"/>
 		<opponentmodel description="Perfect IAMhaggler Bay. Model" classpath="negotiator.boaframework.opponentmodel.PerfectIAMhagglerBayesianModel"/>
 		<opponentmodel description="Opposite Model" classpath="negotiator.boaframework.opponentmodel.OppositeModel"/>
 		<opponentmodel description="Scalable Bayesian Model" classpath="negotiator.boaframework.opponentmodel.ScalableBayesianModel"/>
@@ -95,12 +93,11 @@
 		<opponentmodel description="Smith Frequency Model" classpath="negotiator.boaframework.opponentmodel.SmithFrequencyModel"/>
 		<opponentmodel description="Smith Frequency Model V2" classpath="negotiator.boaframework.opponentmodel.SmithFrequencyModelV2"/>
 		<opponentmodel description="Perfect Scalable Bay. Model" classpath="negotiator.boaframework.opponentmodel.PerfectScalableBayesianModel"/>
-		<opponentmodel description="Group39_OM.class" classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_OM.class"/>
 		<opponentmodel description="CUHKFrequencyModelV2" classpath="negotiator.boaframework.opponentmodel.CUHKFrequencyModelV2"/>
+		<opponentmodel description="HardHeaded Frequency Model" classpath="negotiator.boaframework.opponentmodel.HardHeadedFrequencyModel"/>
 	</opponentmodels>
 	<omstrategies>
 		<omstrategy description="NTFT" classpath="negotiator.boaframework.omstrategy.NTFTstrategy"/>
-		<omstrategy description="Group39_OMS.class" classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_OMS.class"/>
 		<omstrategy description="Best bid" classpath="negotiator.boaframework.omstrategy.BestBid"/>
 		<omstrategy description="The Negotiator Reloaded" classpath="negotiator.boaframework.omstrategy.NullStrategy"/>
 		<omstrategy description="Random" classpath="negotiator.boaframework.omstrategy.NullStrategy"/>

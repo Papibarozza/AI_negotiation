@@ -3,39 +3,19 @@
     <boaparties partyName="newParty">
         <properties/>
         <biddingStrategy>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_BS.class"/>
+            <item classpath="negotiator.boaframework.offeringstrategy.anac2010.AgentK_Offering"/>
         </biddingStrategy>
         <acceptanceStrategy>
-            <parameters name="e" value="1.0"/>
+            <parameters name="rv" value="0.5"/>
             <parameters name="k" value="0.0"/>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_AS.class"/>
+            <parameters name="e" value="0.1"/>
+            <item classpath="C:\Users\Arvid\workspace\IN4010\bin\group39\Group39_AS.class"/>
         </acceptanceStrategy>
         <opponentModel>
-            <parameters name="l" value="0.2"/>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_OM.class"/>
+            <item classpath="negotiator.boaframework.opponentmodel.AgentLGModel"/>
         </opponentModel>
         <omStrategy>
-            <parameters name="t" value="1.1"/>
-            <item classpath="negotiator.boaframework.omstrategy.BestBid"/>
-        </omStrategy>
-    </boaparties>
-    <boaparties partyName="basicFreqModel">
-        <properties/>
-        <biddingStrategy>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_BS.class"/>
-        </biddingStrategy>
-        <acceptanceStrategy>
-            <parameters name="k" value="0.0"/>
-            <parameters name="e" value="1.0"/>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\group39\Group39_AS.class"/>
-        </acceptanceStrategy>
-        <opponentModel>
-            <parameters name="l" value="0.2"/>
-            <item classpath="C:\Users\runar\OneDrive\Desktop\AINegotiation\grp39\AI_negotiation\bin\boaexample\HardHeadedFrequencyModel.class"/>
-        </opponentModel>
-        <omStrategy>
-            <parameters name="t" value="1.1"/>
-            <item classpath="negotiator.boaframework.omstrategy.BestBid"/>
+            <item classpath="negotiator.boaframework.omstrategy.NTFTstrategy"/>
         </omStrategy>
     </boaparties>
 </boaPartiesList>

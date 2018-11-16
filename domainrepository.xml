@@ -32,7 +32,6 @@
                 <profile url="file:etc/templates/ANAC2016/AgentLightSmartGrid/SmartEnergyGrid_util1.xml"/>
                 <profile url="file:etc/templates/ANAC2016/AgentLightSmartGrid/SmartEnergyGrid_util2.xml"/>
                 <profile url="file:etc/templates/ANAC2016/AgentLightSmartGrid/SmartEnergyGrid_util3.xml"/>
-                <profile url="file:etc/templates/ANAC2016/AgentLightSmartGrid/SmartEnergyGrid_util4.xml"/>
             </domainRepItem>
             <domainRepItem url="file:etc/templates/ANAC2016/AgentSmith/DomainAce.xml">
                 <profile url="file:etc/templates/ANAC2016/AgentSmith/DomainAce_util1.xml"/>
@@ -728,10 +727,6 @@
                 <profile url="file:etc/templates/Domain16/Domain16_util4.xml"/>
                 <profile url="file:etc/templates/Domain16/Domain16_util5.xml"/>
                 <profile url="file:etc/templates/Domain16/Domain16_util6.xml"/>
-            </domainRepItem>
-            <domainRepItem url="file:etc/templates/test_dom/test_dom.xml">
-                <profile url="file:etc/templates/test_dom/test_dom_util2.xml"/>
-                <profile url="file:etc/templates/test_dom/test_dom_util3.xml"/>
             </domainRepItem>
         </domainRepItem>
         <protocolRepItem/>

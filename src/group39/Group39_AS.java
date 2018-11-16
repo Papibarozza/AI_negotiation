@@ -46,7 +46,7 @@ public class Group39_AS extends AcceptanceStrategy {
 		double reservationValue = this.reservationValue;
 		double P = minUtility + (1-f(t))*(maxUtility-minUtility);
 		
-		if(myNextBidUtil <= lastOpponentBidUtil){
+		if(myNextBidUtil < lastOpponentBidUtil){
 			return Actions.Accept;
 		}
 		if(lastOpponentBidUtil >= P && lastOpponentBidUtil > reservationValue){
