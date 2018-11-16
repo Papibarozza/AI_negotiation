@@ -1,4 +1,4 @@
-package ai2018.group39;
+package group39;
 
 import java.util.Map;
 
@@ -137,7 +137,10 @@ public class BS_fixed extends OfferingStrategy {
 			System.out.println("Concession");
 			//concession or nice or silent move from opponent
 			//we decrement a little bit our utility w.r.t. our previous bid
-			utility=ourLast.getMyUndiscountedUtil()-0.01;
+			if(Double.compare(ourLast.getMyUndiscountedUtil(),0.55)>=0){
+				utility=ourLast.getMyUndiscountedUtil()-0.05;
+			}
+			else utility=ourLast.getMyUndiscountedUtil();
 			System.out.println("our new utility is "+utility);
 			
 			//opponent new utility should be >= his utility of our previous bid +0.05
@@ -207,7 +210,8 @@ public class BS_fixed extends OfferingStrategy {
 			}
 		}
 		
-		if(newBid==null) System.out.println("No if entered");
+		System.out.println("opponent previous utility is "+ opponentModel.getBidEvaluation(ourLast.getBid()));
+		System.out.println("opponent new utulity is "+opponentModel.getBidEvaluation(newBid.getBid()));
 		newBid.setTime(negotiationSession.getTime());
 		System.out.println("Bid is "+newBid);
 		return newBid;
