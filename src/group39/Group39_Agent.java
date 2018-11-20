@@ -1,14 +1,15 @@
-package Group39;
+package group39;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
-import agents.anac.y2013.MetaAgent.portfolio.thenegotiatorreloaded.NegotiationSession;
-import agents.anac.y2014.E2Agent.myUtility.SessionData;
 import genius.core.Domain;
 import genius.core.boaframework.BoaParty;
+import genius.core.boaframework.NegotiationSession;
+import genius.core.boaframework.SessionData;
 import genius.core.issue.Issue;
 import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
@@ -22,6 +23,7 @@ public class Group39_Agent extends BoaParty {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
+	private Domain domain;
 
 
 
@@ -34,28 +36,35 @@ public class Group39_Agent extends BoaParty {
 	
 	@Override
 	public void init(NegotiationInfo info) {
+		
 		SessionData sessionData = null; 
 		if (info.getPersistentData().getPersistentDataType() == PersistentDataType.SERIALIZABLE) {
 			sessionData = (SessionData) info.getPersistentData().get();
 		}
-		if (sessionData==null) {
-			sessionData= new SessionData(getNumberOfParties());
+		else if (sessionData==null) {
+			sessionData= new SessionData();
 		}
-	
 		
-		//negotiationSession = new NegotiationSession(sessionData , info.getUtilitySpace(), info.getTimeline());
+//		AbstractUtilitySpace utilitySpace = estimateUtilitySpace();
+		
+		this.userModel = info.getUserModel();
+		
+		
+		this.negotiationSession = new NegotiationSession(sessionData, estimateUtilitySpace2(info), info.getTimeline(), 
+				null, info.getUserModel());
 		
 		//Map<String, Double> parameters = new Map<String,Double>();
 		
 		opponentModel = new Group39_OM (); 
-		opponentModel.init(negotiationSession , new HashMap <String , Double >()); 
+		opponentModel.init(negotiationSession , null); 
 		omStrategy = new Group39_OMS();
-		omStrategy.init(negotiationSession, opponentModel,new HashMap <String , Double >());
+		omStrategy.init(negotiationSession, opponentModel,null);
 		offeringStrategy = new Group39_BS();
 		try {
-			offeringStrategy.init(negotiationSession, opponentModel, omStrategy, new HashMap <String , Double >());
+			offeringStrategy.init(negotiationSession, opponentModel, omStrategy, null);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			System.out.println("Failed to init bid strategy");
 			e.printStackTrace();
 		}
 		
@@ -64,6 +73,7 @@ public class Group39_Agent extends BoaParty {
 			acceptConditions.init(negotiationSession, offeringStrategy, opponentModel,new HashMap <String , Double >());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
+			System.out.println("Failed to init accept strategy");
 			e.printStackTrace();
 		}
 		
@@ -154,9 +164,8 @@ public class Group39_Agent extends BoaParty {
 	@Override
 	public AbstractUtilitySpace estimateUtilitySpace() {
 		
-		log("\nHEEEEELLLOOOOOO\n");
-		
-		Domain domain = getDomain ();
+		Domain domain = this.domain;
+		System.out.println(domain);
 		AdditiveUtilitySpaceFactory factory = new AdditiveUtilitySpaceFactory(domain);
 						
 		HashMap<Integer,Double> IssueWeights = generateIssueWeights(domain);
@@ -186,6 +195,40 @@ public class Group39_Agent extends BoaParty {
 		
 		return factory.getUtilitySpace();
 		//return new AdditiveUtilitySpaceFactory(getDomain()).getUtilitySpace();
+	}
+
+
+public AbstractUtilitySpace estimateUtilitySpace2(NegotiationInfo info) {
+		
+		Domain domain = info.getUserModel().getDomain();
+		AdditiveUtilitySpaceFactory factory = new AdditiveUtilitySpaceFactory(domain);
+						
+		HashMap<Integer,Double> IssueWeights = generateIssueWeights(domain);
+		HashMap<Integer,HashMap<ValueDiscrete,Double>> ValueWeights = generateValueWeights(domain);
+		
+		//Set issue weights
+		int nrIssues = IssueWeights.size();
+		List<Issue> Issues = new ArrayList<>();
+		double[] IssueWeightsNotNormalized = new double[nrIssues];
+		int idx1=0;
+		for(Issue issue : domain.getIssues()) {
+			
+			
+			
+			Issues.add(issue);
+			int issueNr=issue.getNumber();
+			IssueWeightsNotNormalized[idx1]=IssueWeights.get(issueNr);
+			for(ValueDiscrete issueValue : ValueWeights.get(issueNr).keySet()) {
+				double w= ValueWeights.get(issueNr).get(issueValue);
+				factory.setUtility(issue, issueValue, w);
+			}
+			idx1++;
+		}
+		double[] IssueWeightsNormalized=divide(IssueWeightsNotNormalized,sumVector(IssueWeightsNotNormalized));
+		
+		factory.getUtilitySpace().setWeights(Issues, IssueWeightsNormalized);
+		
+		return factory.getUtilitySpace();
 	}
 	
 	private double[] divide(double[] d, double n) {

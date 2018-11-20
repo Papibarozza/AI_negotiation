@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import genius.core.Bid;
+import genius.core.Domain;
 import genius.core.bidding.BidDetails;
 import genius.core.boaframework.BOAparameter;
 import genius.core.boaframework.NegotiationSession;
@@ -19,6 +20,8 @@ import genius.core.issue.IssueDiscrete;
 import genius.core.issue.Objective;
 import genius.core.issue.Value;
 import genius.core.issue.ValueDiscrete;
+import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
+import genius.core.utility.AbstractUtilitySpace;
 import genius.core.utility.AdditiveUtilitySpace;
 import genius.core.utility.Evaluator;
 import genius.core.utility.EvaluatorDiscrete;
@@ -76,6 +79,8 @@ public class Group39_OM extends OpponentModel {
 		initializeModel();
 
 	}
+
+	
 
 	
 	@Override
