@@ -12,9 +12,9 @@ import genius.core.boaframework.SortedOutcomeSpace;
 
 public class Group39_BS extends OfferingStrategy {
 	private SortedOutcomeSpace outcomespace;
+	private int counter;
 	public Group39_BS(){}
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void init(NegotiationSession negotiationSession, OpponentModel opponentModel, OMStrategy omStrategy,
 			Map<String, Double> parameters) throws Exception {
@@ -24,50 +24,33 @@ public class Group39_BS extends OfferingStrategy {
 		this.endNegotiation = false;
 		outcomespace = new SortedOutcomeSpace(negotiationSession.getUtilitySpace());
 		negotiationSession.setOutcomeSpace(outcomespace);
+		counter=0;
 
 	}
-
 	
-	@SuppressWarnings("deprecation")
 	@Override
-	public BidDetails determineOpeningBid() {
-		return negotiationSession.getMaxBidinDomain();
-		
-	}
-	
-	@SuppressWarnings("deprecation")
-	@Override
-	public BidDetails determineNextBid() {
-		
-		double utility=0;
-		
-		//utility opponent's bid
-		double lastUtility=negotiationSession.getOpponentBidHistory().getLastBidDetails().getMyUndiscountedUtil();
-		
-		//utility previous bid
-		double previousUtility=negotiationSession.getOwnBidHistory().getLastBidDetails().getMyUndiscountedUtil();
-				
-		//selection of the move
-		if(lastUtility <= previousUtility){
-			//the opponent lowered my utility, thus I increase it again
-			utility=(lastUtility + getIncrement(negotiationSession.getTime()))/(lastUtility+1);
+	public BidDetails determineNextBid(){
+			//we use this variable to count the bids made so far
+			counter++;
 			
-		}
-		else{
-			//the opponent increased my utility, thus I concede something
-			utility=(lastUtility - getDecrement(negotiationSession.getTime()))/(lastUtility-Math.E);
-			utility=Math.abs(utility);
+			//before the first 10 bids we don't have enough info about the opponent
+			//moreover if we don't have an opponent, we can not use it
+			if(counter<10 || opponentModel instanceof NoModel){
+				return determineWithoutOpponent();
+			}
+			
+			return determineWithOpponent();
+	}
+	
+	private BidDetails determineWithoutOpponent(){
 		
-		}
-						
-		BidDetails newBid=null;
+		//our previous bid
+		BidDetails ourLast=negotiationSession.getOwnBidHistory().getLastBidDetails();
 		
-		//check if we have the opponent model
-		if(opponentModel instanceof NoModel)
-			newBid=negotiationSession.getOutcomeSpace().getBidNearUtility(utility);
-		else{
-			newBid=omStrategy.getBid(outcomespace, utility);
-		}
+		//we decrement our utility because at the beginning no increments are possible
+		double utility=ourLast.getMyUndiscountedUtil()-0.01;
+		
+		BidDetails newBid=negotiationSession.getOutcomeSpace().getBidNearUtility(utility);
 		
 		newBid.setTime(negotiationSession.getTime());
 		
@@ -75,19 +58,155 @@ public class Group39_BS extends OfferingStrategy {
 		
 	}
 	
-	private double getIncrement(double time){
-		return Math.exp(-time);
+	
+	private BidDetails determineWithOpponent(){
+		
+		double utility=0;
+	
+		int bidsOppSize=negotiationSession.getOpponentBidHistory().size();
+		
+		//previous opponent's bid
+		BidDetails previousBid=negotiationSession.getOpponentBidHistory().getHistory().get(bidsOppSize-2);
+		
+		//last opponent's bid
+		BidDetails lastBid=negotiationSession.getOpponentBidHistory().getLastBidDetails();
+		
+		//our previous bid
+		BidDetails ourLast=negotiationSession.getOwnBidHistory().getLastBidDetails();
+		
+		//my utility of last bid
+		double lastUtilityOwn=lastBid.getMyUndiscountedUtil();
+		
+		//opponent's utility last bid
+		double lastUtilityOpp=opponentModel.getBidEvaluation(lastBid.getBid());
+		
+		//my utility previous bid
+		double previousUtilityOwn=previousBid.getMyUndiscountedUtil();
+		
+		//opponent's utility previous bid
+		double previousUtilityOpp=opponentModel.getBidEvaluation(previousBid.getBid());	
+				
+		BidDetails newBid=null;
+		
+		//selection of the move and the next bid
+		//we "mirror" the strategy of our opponent
+		
+		if(Double.compare(lastUtilityOwn,previousUtilityOwn)<=0 && Double.compare(lastUtilityOpp, previousUtilityOpp)>0){
+			
+			//opponent is selfish, we increment our utility w.r.t. our previous bid
+			//since the increment is a constant equals to 0.05, we check that
+			//our previous bid's utility is lower than 0.95
+			if(Double.compare(ourLast.getMyUndiscountedUtil(), 0.95)<=0){
+				utility=ourLast.getMyUndiscountedUtil() + 0.05;
+			}
+			else utility=ourLast.getMyUndiscountedUtil();
+			
+			//opponent new utility should be <= his utility of our previous bid
+			//we try to generate a bid that respects this condition
+			
+			newBid=omStrategy.getBid(outcomespace, utility);
+				
+			int i=0;
+			while(i<100){//to avoid cycling too much
+				
+				double newUtilityOpp=opponentModel.getBidEvaluation(newBid.getBid());
+				if(Double.compare(newUtilityOpp, opponentModel.getBidEvaluation(ourLast.getBid()))<=0){
+					break;
+				}
+				newBid=omStrategy.getBid(outcomespace, utility);
+				i++;
+			}
+			
+			
+			
+		}
+		else if(Double.compare(lastUtilityOwn, previousUtilityOwn)>=0 && Double.compare(lastUtilityOpp, previousUtilityOpp)<= 0){
+			
+			//concession or nice or silent move from opponent
+			//we decrement a little bit our utility w.r.t. our previous bid
+			if(Double.compare(ourLast.getMyUndiscountedUtil(),0.55)>=0){
+				utility=ourLast.getMyUndiscountedUtil()-0.05;
+			}
+			else utility=ourLast.getMyUndiscountedUtil();
+						
+			//opponent new utility should be >= his utility of our previous bid +0.05
+			//we try to generate a bid that respects this condition
+			newBid=omStrategy.getBid(outcomespace, utility);
+				
+			int i=0;
+			while(i<100){//to avoid cycling too much
+				double newUtilityOpp=opponentModel.getBidEvaluation(newBid.getBid());
+				if(Double.compare(newUtilityOpp, opponentModel.getBidEvaluation(ourLast.getBid())+0.05)>=0){
+					break;
+				}
+				newBid=omStrategy.getBid(outcomespace, utility);
+				i++;
+			}
+			
+			
+		}
+		else if(Double.compare(lastUtilityOwn, previousUtilityOwn) < 0 && Double.compare(lastUtilityOpp, previousUtilityOpp) <= 0){
+			
+			//unfortunate move from the opponent
+			utility=ourLast.getMyUndiscountedUtil();
+						
+			//opponent new utility should be >= his utility of our previous bid
+			//we try to generate a bid that respects this condition
+			newBid=omStrategy.getBid(outcomespace, utility);
+				
+			int i=0;
+			while(i<100){//to avoid cycling too much
+				
+				double newUtilityOpp=opponentModel.getBidEvaluation(newBid.getBid());
+				if(Double.compare(newUtilityOpp, opponentModel.getBidEvaluation(ourLast.getBid()))>0){
+					break;
+				}
+				newBid=omStrategy.getBid(outcomespace, utility);
+				i++;
+			}
+		}
+		else if(Double.compare(lastUtilityOwn, previousUtilityOwn)> 0 && Double.compare(lastUtilityOpp, previousUtilityOpp) > 0){
+		
+			//fortunate move from opponent
+			//we use the same increment of the selfish case
+			if(Double.compare(ourLast.getMyUndiscountedUtil(), 0.95)<=0){
+				utility=ourLast.getMyUndiscountedUtil() + 0.05;
+			}
+			else utility=ourLast.getMyUndiscountedUtil();
+			
+			
+			//opponent new utility should be >= his utility of our previous bid +0.05
+			//we try to generate a bid that respects this condition
+			
+			newBid=omStrategy.getBid(outcomespace, utility);
+				
+			int i=0;
+			while(i<100){//to avoid cycling too much
+				
+				double newUtilityOpp=opponentModel.getBidEvaluation(newBid.getBid());
+				if(Double.compare(newUtilityOpp, opponentModel.getBidEvaluation(ourLast.getBid())+0.05)>=0){
+					break;
+				}
+				newBid=omStrategy.getBid(outcomespace, utility);
+				i++;
+					
+			}
+		}
+		
+		newBid.setTime(negotiationSession.getTime());
+		
+		return newBid;
+
 	}
 	
-	private double getDecrement(double time){
-		return Math.exp(time);
+	@Override
+	public BidDetails determineOpeningBid() {
+		return negotiationSession.getMaxBidinDomain();
 	}
 
 	@Override
 	public String getName() {
 		return "Group39_BS";
 	}
-	
-
 
 }
