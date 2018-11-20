@@ -50,7 +50,6 @@ public class Group39_OM extends OpponentModel {
 	private int learnValueAdditionStart;
 
 
-	@SuppressWarnings("deprecation")
 	@Override
 	public void init(NegotiationSession negotiationSession,
 			Map<String, Double> parameters) {
