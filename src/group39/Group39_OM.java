@@ -106,6 +106,7 @@ public class Group39_OM extends OpponentModel {
 					.getHistory()
 					.get(negotiationSession.getOpponentBidHistory().size() - 4);
 			bidList.add(prevPrevPrevOppBid);
+			
 		}
 //		This is a hashmap of <IssueValue, changed>. Where changed is 0 or 1 depending on whether we want
 //		to give it more weight or not
@@ -120,8 +121,8 @@ public class Group39_OM extends OpponentModel {
 			}
 		}
 		
-		this.updateLearnValueAddition(); //update value
-		this.updateLearnCoef();
+		this.updateLearnValueAddition(); //update LearnAdditionValue
+		this.updateLearnCoef(); //update learnCoef
 		goldenValue=learnCoef/amountOfIssues;
 	
 		// The total sum of weights before normalization.
@@ -282,7 +283,7 @@ public class Group39_OM extends OpponentModel {
 	//learnValueAdditionStart to 1 when we have reached the end of the negotiation.
 	private void updateLearnValueAddition(){
 		double t=negotiationSession.getTime();
-		learnValueAddition=(int)Math.round(learnValueAdditionStart-(learnValueAddition-1)*t);
+		learnValueAddition=(int)Math.round(learnValueAdditionStart-(learnValueAdditionStart-1)*t);
 	}
 	
 	//This function updates the parameter learnCoef. It decreases linearly from the value learnCoefStart to the
