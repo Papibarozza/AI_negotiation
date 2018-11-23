@@ -74,7 +74,9 @@ public class Group39_AS_uncertainty extends AcceptanceStrategy{
 		this.negotiationSession = negoSession;
 		this.userModel = negotiationSession.getUserModel();
 		
+//		If there is a user model, we are working under uncertainty
 		if (userModel != null) {
+//			The uncertainty helper calculates the utility space for us
 			Uncertainty_Helper helper = new Uncertainty_Helper(negoSession);
 			this.utilitySpace = helper.estimateUtilitySpace();
 		} else {

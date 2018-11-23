@@ -30,7 +30,9 @@ public class Group39_BS_uncertainty extends OfferingStrategy{
 		
 		this.userModel = negotiationSession.getUserModel();
 		
+//		If there is a user model, we are working under uncertainty
 		if (userModel != null) {
+//			The uncertainty helper calculates the utility space for us
 			Uncertainty_Helper helper = new Uncertainty_Helper(negotiationSession);
 			this.utilitySpace = helper.estimateUtilitySpace();
 		} else {
@@ -65,7 +67,12 @@ public class Group39_BS_uncertainty extends OfferingStrategy{
 		BidDetails ourLast=negotiationSession.getOwnBidHistory().getLastBidDetails();
 		
 		//we decrement our utility because at the beginning no increments are possible
-		double utility=ourLast.getMyUndiscountedUtil()-0.04;
+		double utility=ourLast.getMyUndiscountedUtil()-0.01;
+		if (this.userModel != null) {
+//			We have to take som larger steps under uncertainty, because it is more 
+//				difficult to find bids 0.01 from a given bid
+			utility=ourLast.getMyUndiscountedUtil()-0.04;
+		}
 		
 		BidDetails newBid=negotiationSession.getOutcomeSpace().getBidNearUtility(utility);
 		

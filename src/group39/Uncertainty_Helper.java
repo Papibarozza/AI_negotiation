@@ -13,6 +13,13 @@ import genius.core.issue.ValueDiscrete;
 import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
 import genius.core.uncertainty.UserModel;
 import genius.core.utility.AbstractUtilitySpace;
+/**
+ * 
+ * The uncertainty helper takes as input a negotiation session with a user model.
+ * The main method estimateUitilitySpace() returns an AbstractUtilitySpace for the user model.
+ *
+ */
+
 
 public class Uncertainty_Helper {
 	NegotiationSession session;
@@ -23,9 +30,6 @@ public class Uncertainty_Helper {
 		this.session = session;
 		this.userModel = session.getUserModel();
 	}
-	
-	
-	
 	
 	/**
 	 * With this method, you can override the default estimate of the utility
@@ -120,6 +124,8 @@ public class Uncertainty_Helper {
 	private HashMap<Integer, HashMap<ValueDiscrete, Integer>> generateValueWeights(Domain domain){
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> AllValueWeights = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		int nrBids = userModel.getBidRanking().getSize();
+//		We give each issueValue a rank. The first value seen for an issue has rank 1, the second
+//			unique value has rank 2 etc.
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		//parameters to experiment with
 		int b=5; //first value
@@ -164,6 +170,7 @@ public class Uncertainty_Helper {
 		System.out.println(allValueRanks);
 		System.out.println(AllValueWeights);
 		
+//		We divide each valueWeight by their respective valueRanks. 
 		for(Integer issue : AllValueWeights.keySet()) {
 			for(ValueDiscrete issueValue : AllValueWeights.get(issue).keySet()) {
 				int oldValue = AllValueWeights.get(issue).get(issueValue);
