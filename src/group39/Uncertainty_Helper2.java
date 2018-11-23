@@ -2,7 +2,6 @@ package group39;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import genius.core.Domain;
@@ -14,12 +13,12 @@ import genius.core.uncertainty.AdditiveUtilitySpaceFactory;
 import genius.core.uncertainty.UserModel;
 import genius.core.utility.AbstractUtilitySpace;
 
-public class Uncertainty_Helper {
+public class Uncertainty_Helper2 {
 	NegotiationSession session;
 	UserModel userModel;
 	
 	
-	public Uncertainty_Helper(NegotiationSession session) {
+	public Uncertainty_Helper2(NegotiationSession session) {
 		this.session = session;
 		this.userModel = session.getUserModel();
 	}
@@ -85,7 +84,7 @@ public class Uncertainty_Helper {
 	private HashMap<Integer, Double> generateIssueWeights(Domain domain){
 		//Parameters that 
 		double a=1;
-		double b=1;
+		double b=2;
 		System.out.println("Generating weights");
 		
 		HashMap<Integer, Double> IssueWeights = new HashMap<Integer,Double>();
@@ -94,7 +93,7 @@ public class Uncertainty_Helper {
 		for(int i=0;i<nrBids-1;i++) {
 			try {
 				//Decreasing added issue weight
-				double w=(b+(3)*(i/nrBids));
+				double w=(b-(b-a)*(i/nrBids));
 				
 				for(Issue issue : domain.getIssues()) {
 					Value v1= userModel.getBidRanking().getBidOrder().get(nrBids-1-i).getValue(issue.getNumber());
@@ -120,23 +119,30 @@ public class Uncertainty_Helper {
 	private HashMap<Integer, HashMap<ValueDiscrete, Integer>> generateValueWeights(Domain domain){
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> AllValueWeights = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		int nrBids = userModel.getBidRanking().getSize();
-		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
+		
 		//parameters to experiment with
-		int b=1; //first value
+		int b=3; //first value
 		int a=1; //should a decrease linearly? from b to a
 		
-		for(int i=0;i<nrBids-1;i++) {
+		for(int i=0;i<nrBids;i++) {
 			try {
 				
-//				int w=Math.round((b+(4)*(i/nrBids)));
-				int w = 1;
+				int w=Math.round((b-(b-a)*(i/nrBids)));
 				
 				for(Issue issue : domain.getIssues()) {
 					int issueNr = issue.getNumber();
 					ValueDiscrete v= (ValueDiscrete) userModel.getBidRanking().getBidOrder().get(nrBids-1-i).getValue(issue.getNumber());
+					int bonus = 0;
+					if (i>2 && (i<nrBids-2)) {
+						ValueDiscrete v1= (ValueDiscrete) userModel.getBidRanking().getBidOrder().get(nrBids-i+1).getValue(issue.getNumber());
+//						ValueDiscrete v2= (ValueDiscrete) userModel.getBidRanking().getBidOrder().get(nrBids-i+2).getValue(issue.getNumber());
+						if (v.getValue().equals(v1.getValue())) {
+							bonus = 3;
+						}
+					}
 					if(AllValueWeights.containsKey(issueNr)) {
 						if(AllValueWeights.get(issueNr).containsKey(v)) {
-							int c=AllValueWeights.get(issueNr).get(v)+w;
+							int c=AllValueWeights.get(issueNr).get(v)+w+bonus;
 							AllValueWeights.get(issueNr).replace(v, c);
 						}else {
 							AllValueWeights.get(issueNr).put(v,b);
@@ -146,39 +152,13 @@ public class Uncertainty_Helper {
 						ValueWeights.put(v, w);
 						AllValueWeights.put(issueNr, ValueWeights);
 					}
-					if(allValueRanks.containsKey(issueNr)) {
-						if(!allValueRanks.get(issueNr).containsKey(v)){
-							int rank = allValueRanks.get(issueNr).size();
-							allValueRanks.get(issueNr).put(v, rank+1);
-						}
-					} else {
-						HashMap<ValueDiscrete, Integer> valueRanks = new HashMap<ValueDiscrete, Integer>();
-						valueRanks.put(v, 1);
-						allValueRanks.put(issueNr, valueRanks);
-					}
 				}
 			}catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println(allValueRanks);
-		System.out.println(AllValueWeights);
-		
-		for(Integer issue : AllValueWeights.keySet()) {
-			for(ValueDiscrete issueValue : AllValueWeights.get(issue).keySet()) {
-				int oldValue = AllValueWeights.get(issue).get(issueValue);
-				int rank;
-				try {
-					rank = allValueRanks.get(issue).get(issueValue);
-				} catch (Exception e) {
-					rank = allValueRanks.get(issue).size();
-				}
-				int newValue = Math.round(oldValue/rank);
-				AllValueWeights.get(issue).replace(issueValue, newValue);
-			}
-		}
-		
 		return AllValueWeights;
 	}
 
 }
+

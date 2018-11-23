@@ -8,8 +8,6 @@ import genius.core.bidding.BidDetails;
 import genius.core.boaframework.NegotiationSession;
 import genius.core.boaframework.OMStrategy;
 import genius.core.boaframework.OpponentModel;
-import genius.core.uncertainty.UserModel;
-import genius.core.utility.AbstractUtilitySpace;
 
 public class Group39_OMS_uncertainty extends OMStrategy{
 

@@ -3,7 +3,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import genius.core.bidding.BidDetails;
 import genius.core.boaframework.AcceptanceStrategy;
 import genius.core.boaframework.Actions;
 import genius.core.boaframework.BOAparameter;
