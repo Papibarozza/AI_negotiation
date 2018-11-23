@@ -85,7 +85,7 @@ public class Uncertainty_Helper {
 	private HashMap<Integer, Double> generateIssueWeights(Domain domain){
 		//Parameters that 
 		double a=1;
-		double b=1;
+		double b=3;
 		System.out.println("Generating weights");
 		
 		HashMap<Integer, Double> IssueWeights = new HashMap<Integer,Double>();
@@ -94,7 +94,7 @@ public class Uncertainty_Helper {
 		for(int i=0;i<nrBids-1;i++) {
 			try {
 				//Decreasing added issue weight
-				double w=(b+(3)*(i/nrBids));
+				double w=(b-((b-a)*(i/nrBids)));
 				
 				for(Issue issue : domain.getIssues()) {
 					Value v1= userModel.getBidRanking().getBidOrder().get(nrBids-1-i).getValue(issue.getNumber());
@@ -122,14 +122,14 @@ public class Uncertainty_Helper {
 		int nrBids = userModel.getBidRanking().getSize();
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		//parameters to experiment with
-		int b=1; //first value
+		int b=5; //first value
 		int a=1; //should a decrease linearly? from b to a
 		
 		for(int i=0;i<nrBids-1;i++) {
 			try {
 				
-//				int w=Math.round((b+(4)*(i/nrBids)));
-				int w = 1;
+				int w=Math.round((b-((b-a)*(i/nrBids))));
+//				int w = 1;
 				
 				for(Issue issue : domain.getIssues()) {
 					int issueNr = issue.getNumber();

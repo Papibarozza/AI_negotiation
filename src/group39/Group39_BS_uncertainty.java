@@ -65,7 +65,7 @@ public class Group39_BS_uncertainty extends OfferingStrategy{
 		BidDetails ourLast=negotiationSession.getOwnBidHistory().getLastBidDetails();
 		
 		//we decrement our utility because at the beginning no increments are possible
-		double utility=ourLast.getMyUndiscountedUtil()-0.05;
+		double utility=ourLast.getMyUndiscountedUtil()-0.04;
 		
 		BidDetails newBid=negotiationSession.getOutcomeSpace().getBidNearUtility(utility);
 		
