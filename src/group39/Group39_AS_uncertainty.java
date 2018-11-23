@@ -1,4 +1,5 @@
 package group39;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -11,10 +12,13 @@ import genius.core.boaframework.NegotiationSession;
 import genius.core.boaframework.OfferingStrategy;
 import genius.core.boaframework.OpponentModel;
 import genius.core.boaframework.SortedOutcomeSpace;
+import genius.core.uncertainty.UserModel;
+import genius.core.utility.AbstractUtilitySpace;
+import genius.core.utility.UtilitySpace;
 
-public class Group39_AS extends AcceptanceStrategy {
-	
-	/** Parameter for concession function*/
+public class Group39_AS_uncertainty extends AcceptanceStrategy{
+
+    	/** Parameter for concession function*/
 	
 	private double k;
 	/** Minimum target utility */
@@ -24,19 +28,22 @@ public class Group39_AS extends AcceptanceStrategy {
 	private SortedOutcomeSpace outcomespace;
 	private Double minAcceptanceValue;
 	
-	public Group39_AS() {
+	private UserModel userModel;
+	private AbstractUtilitySpace utilitySpace;
+	
+	public Group39_AS_uncertainty() {
 		
 	}
 
-	@SuppressWarnings("deprecation")
-	@Override
+	
 	/***
 	 * Implements the acceptance strategy mentioned in the paper: HardHeaded by Krimpen et al.
 	 * We take into account the current time in the negotiation to not miss an oppurtunity to
 	 * accept an offer before time runs out.
 	*/
-	
+	@Override
 	public Actions determineAcceptability() {
+		
 		double t = negotiationSession.getTime();
 		double lastOpponentBidUtil = negotiationSession.getOpponentBidHistory().getLastBidDetails()
 				.getMyUndiscountedUtil();
@@ -59,15 +66,24 @@ public class Group39_AS extends AcceptanceStrategy {
 
 	@Override
 	public String getName() {
-		return "Group39_AS";
+		return "Group39_AS_uncertainty";
 	}
 	
 	public void init(NegotiationSession negoSession, OfferingStrategy strat, OpponentModel opponentModel,
 			Map<String, Double> parameters) throws Exception {
 		this.negotiationSession = negoSession;
+		this.userModel = negotiationSession.getUserModel();
+		
+		if (userModel != null) {
+			Uncertainty_Helper helper = new Uncertainty_Helper(negoSession);
+			this.utilitySpace = helper.estimateUtilitySpace();
+		} else {
+			this.utilitySpace = negoSession.getUtilitySpace();
+		}
+		
 		this.offeringStrategy = strat;
 		this.opponentModel = opponentModel;
-		outcomespace = new SortedOutcomeSpace(negotiationSession.getUtilitySpace());
+		outcomespace = new SortedOutcomeSpace(this.utilitySpace);
 		negotiationSession.setOutcomeSpace(outcomespace);
 		
 		if (parameters == null) {
