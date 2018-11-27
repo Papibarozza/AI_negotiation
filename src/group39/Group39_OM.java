@@ -59,6 +59,7 @@ public class Group39_OM extends OpponentModel {
 		} else {
 			learnCoef = 0.2;
 		}
+//		The learnValueAddition starts at 5 instead of 1 because we want to add more weight to the earlier values
 		learnValueAddition = 5;
 		learnValueAdditionStart=learnValueAddition;
 		learnCoefatStart=learnCoef;
