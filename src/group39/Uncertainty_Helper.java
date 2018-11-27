@@ -48,10 +48,10 @@ public class Uncertainty_Helper {
 		int nrIssues = IssueWeights.size();
 		List<Issue> Issues = new ArrayList<>();
 		double[] IssueWeightsNotNormalized = new double[nrIssues];
-		int idx1=0;
+		int idx1=0; //Keep track of issue index
+		//Iterate through all issues and store their weights in an double array IssueWeightsNotNormalized
+		//and moreover set utility for each value
 		for(Issue issue : domain.getIssues()) {
-			
-			
 			
 			Issues.add(issue);
 			int issueNr=issue.getNumber();
@@ -62,10 +62,9 @@ public class Uncertainty_Helper {
 			}
 			idx1++;
 		}
+		//Normalize issue weights and then set weights, then return.
 		double[] IssueWeightsNormalized=divide(IssueWeightsNotNormalized,sumVector(IssueWeightsNotNormalized));
-		
 		factory.getUtilitySpace().setWeights(Issues, IssueWeightsNormalized);
-		System.out.println(factory.getUtilitySpace());
 		
 		return factory.getUtilitySpace();
 	}
@@ -126,22 +125,21 @@ public class Uncertainty_Helper {
 	}
 	
 	//This method is somewhat similar to generateIssueWeights in a way that ll the bids in the usermodel are iterated
-	//but a weight is added to each issue value and not the issue itself.
+	//but a weight is added to each issue value and not the issue itself. Moreover, the weight of a value is divided by it
+	//rank which significantly improved our model.  
 	private HashMap<Integer, HashMap<ValueDiscrete, Integer>> generateValueWeights(Domain domain){
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> AllValueWeights = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		int nrBids = userModel.getBidRanking().getSize();
 //		We give each issueValue a rank. The first value seen for an issue has rank 1, the second
 //			unique value has rank 2 etc.
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
-		//parameters to experiment with
+		//parameters to experiment with, b=5 and a=1 was considered as good parameters after testing
 		int b=5;
 		int a=1;
 		
 		for(int i=0;i<nrBids-1;i++) {
 			try {
-				
-				int w=Math.round((b-((b-a)*(i/nrBids))));
-				
+				int w=Math.round((b-((b-a)*(i/nrBids)))); //Decrease added weight
 				for(Issue issue : domain.getIssues()) {
 					int issueNr = issue.getNumber();
 					ValueDiscrete v= (ValueDiscrete) userModel.getBidRanking().getBidOrder().get(nrBids-1-i).getValue(issue.getNumber());
