@@ -19,7 +19,6 @@ public class Group39_BS_uncertainty extends OfferingStrategy{
 	private AbstractUtilitySpace utilitySpace;
 	private UserModel userModel;
 	public Group39_BS_uncertainty() {
-		// TODO Auto-generated constructor stub
 	}
 	
 	@Override

@@ -65,8 +65,6 @@ public class Uncertainty_Helper {
 		double[] IssueWeightsNormalized=divide(IssueWeightsNotNormalized,sumVector(IssueWeightsNotNormalized));
 		
 		factory.getUtilitySpace().setWeights(Issues, IssueWeightsNormalized);
-		System.out.println(factory.getUtilitySpace());
-		
 		return factory.getUtilitySpace();
 	}
 	
@@ -90,10 +88,8 @@ public class Uncertainty_Helper {
 		//Parameters that 
 		double a=1;
 		double b=3;
-		System.out.println("Generating weights");
 		
 		HashMap<Integer, Double> IssueWeights = new HashMap<Integer,Double>();
-		System.out.println(this.userModel);
 		int nrBids = this.userModel.getBidRanking().getSize();	
 		for(int i=0;i<nrBids-1;i++) {
 			try {
@@ -129,13 +125,12 @@ public class Uncertainty_Helper {
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		//parameters to experiment with
 		int b=5; //first value
-		int a=1; //should a decrease linearly? from b to a
+		int a=1;
 		
 		for(int i=0;i<nrBids-1;i++) {
 			try {
 				
 				int w=Math.round((b-((b-a)*(i/nrBids))));
-//				int w = 1;
 				
 				for(Issue issue : domain.getIssues()) {
 					int issueNr = issue.getNumber();
@@ -167,8 +162,6 @@ public class Uncertainty_Helper {
 				ex.printStackTrace();
 			}
 		}
-		System.out.println(allValueRanks);
-		System.out.println(AllValueWeights);
 		
 //		We divide each valueWeight by their respective valueRanks. 
 		for(Integer issue : AllValueWeights.keySet()) {
