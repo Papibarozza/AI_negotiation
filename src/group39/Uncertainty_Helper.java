@@ -32,9 +32,9 @@ public class Uncertainty_Helper {
 	}
 	
 	/**
-	 * With this method, you can override the default estimate of the utility
+	 * With this method, we override the default estimate of the utility
 	 * space given uncertain preferences specified by the user model. This
-	 * example sets every value to zero.
+	 * method uses a frequence model to estimate the utility space when uncertainty is present
 	 */
 	public AbstractUtilitySpace estimateUtilitySpace() {
 		
@@ -48,10 +48,10 @@ public class Uncertainty_Helper {
 		int nrIssues = IssueWeights.size();
 		List<Issue> Issues = new ArrayList<>();
 		double[] IssueWeightsNotNormalized = new double[nrIssues];
-		int idx1=0;
+		int idx1=0; //Keep track of issue index
+		//Iterate through all issues and store their weights in an double array IssueWeightsNotNormalized
+		//and moreover set utility for each value
 		for(Issue issue : domain.getIssues()) {
-			
-			
 			
 			Issues.add(issue);
 			int issueNr=issue.getNumber();
@@ -62,12 +62,12 @@ public class Uncertainty_Helper {
 			}
 			idx1++;
 		}
+		//Normalize issue weights and then set weights, then return.
 		double[] IssueWeightsNormalized=divide(IssueWeightsNotNormalized,sumVector(IssueWeightsNotNormalized));
-		
 		factory.getUtilitySpace().setWeights(Issues, IssueWeightsNormalized);
 		return factory.getUtilitySpace();
 	}
-	
+	//Help function that divides an array with a scalar
 	private double[] divide(double[] d, double n) {
 		for(int i=0; i<d.length;i++) {
 			d[i]=d[i]/n;
@@ -75,6 +75,7 @@ public class Uncertainty_Helper {
 		return d;
 	}
 	
+	//Help function that determines the sum of an array containing doubles
 	private double sumVector(double[] d) {
 		double s=0;
 		for(int i=0;i<d.length;i++) {
@@ -83,14 +84,19 @@ public class Uncertainty_Helper {
 		return s;
 	}
 	
-	
+	//Method that iterates through all the bids in the usermodel. The issues are ordered from low to high utility.
+	//The weight w is added to an issue when the issue has the same value within two following bids.
+	//The method then returns a hashmap with keys corresponding to issue number and the value as the weight. Note
+	//that these weight are not normalized.
 	private HashMap<Integer, Double> generateIssueWeights(Domain domain){
-		//Parameters that 
+		//Parameters
 		double a=1;
 		double b=3;
 		
+		//Initialize hashmap
 		HashMap<Integer, Double> IssueWeights = new HashMap<Integer,Double>();
-		int nrBids = this.userModel.getBidRanking().getSize();	
+		int nrBids = this.userModel.getBidRanking().getSize();
+		//Go through all bids in the usermodel
 		for(int i=0;i<nrBids-1;i++) {
 			try {
 				//Decreasing added issue weight
@@ -117,6 +123,9 @@ public class Uncertainty_Helper {
 		return IssueWeights;
 	}
 	
+	//This method is somewhat similar to generateIssueWeights in a way that ll the bids in the usermodel are iterated
+	//but a weight is added to each issue value and not the issue itself. Moreover, the weight of a value is divided by it
+	//rank which significantly improved our model.  
 	private HashMap<Integer, HashMap<ValueDiscrete, Integer>> generateValueWeights(Domain domain){
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> AllValueWeights = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
 		int nrBids = userModel.getBidRanking().getSize();
@@ -129,9 +138,7 @@ public class Uncertainty_Helper {
 		
 		for(int i=0;i<nrBids-1;i++) {
 			try {
-				
-				int w=Math.round((b-((b-a)*(i/nrBids))));
-				
+				int w=Math.round((b-((b-a)*(i/nrBids)))); //Decrease added weight
 				for(Issue issue : domain.getIssues()) {
 					int issueNr = issue.getNumber();
 					ValueDiscrete v= (ValueDiscrete) userModel.getBidRanking().getBidOrder().get(nrBids-1-i).getValue(issue.getNumber());

@@ -43,16 +43,29 @@ public class Group39_AS_uncertainty extends AcceptanceStrategy{
 	*/
 	@Override
 	public Actions determineAcceptability() {
-		
+		// Current negotiation time in range [0,1]
 		double t = negotiationSession.getTime();
+		// Get the opponents last bids utility to this agent
 		double lastOpponentBidUtil = negotiationSession.getOpponentBidHistory().getLastBidDetails()
 				.getMyUndiscountedUtil();
+		//Get my utility for the next bid
 		double myNextBidUtil = offeringStrategy.getNextBid().getMyUndiscountedUtil();
+		// Get the minUtility and maxUtility
+		// from the bid domain initialized in the init function of this class
 		double minUtility = negotiationSession.getMinBidinDomain().getMyUndiscountedUtil();
 		double maxUtility = negotiationSession.getMaxBidinDomain().getMyUndiscountedUtil();
+		//Below this value we will never accept. Protects us against settling to low, instead we walk away.
 		double minAcceptanceValue = this.minAcceptanceValue;
+		// Acceptance critera as defined in the article HardHeaded by krimpen et
+		// al.
 		double P = minUtility + (1-f(t))*(maxUtility-minUtility);
 		
+		// If our calculated utility from the last bid is higher than our
+		// calculated acceptance value (P) and our minimum Acceptance Value we accept.
+		// The acceptance value is
+		// changed as a function of time.
+		//We also accept if the utility of the next bid that we will offer is lower than
+		//the bid we just recivied from the opponent (still taking minimal acceptance value into account)
 		if(myNextBidUtil < lastOpponentBidUtil && lastOpponentBidUtil > minAcceptanceValue){
 			return Actions.Accept;
 		}
@@ -80,6 +93,9 @@ public class Group39_AS_uncertainty extends AcceptanceStrategy{
 			Uncertainty_Helper helper = new Uncertainty_Helper(negoSession);
 			this.utilitySpace = helper.estimateUtilitySpace();
 		} else {
+			// Creates an outcome space of possible bids and defines this to be the
+			// negotiationsessions
+			// outcomespace.
 			this.utilitySpace = negoSession.getUtilitySpace();
 		}
 		
