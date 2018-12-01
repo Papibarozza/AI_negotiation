@@ -96,7 +96,6 @@ public class Group39_OM extends OpponentModel {
 		bidList.add(oppBid);
 		bidList.add(prevOppBid);
 //		If the opponent has given 4 or more bids we consider the 4 last ones. I.e. add them to bidList
-//		We tried increasing this to 7, but it did not improve performance noticeably
 		if (negotiationSession.getOpponentBidHistory().size() > 3) {
 			BidDetails prevPrevOppBid = negotiationSession.getOpponentBidHistory()
 					.getHistory()
