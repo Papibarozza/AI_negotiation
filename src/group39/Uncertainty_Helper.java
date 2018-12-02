@@ -89,7 +89,9 @@ public class Uncertainty_Helper {
 	//The method then returns a hashmap with keys corresponding to issue number and the value as the weight. Note
 	//that these weight are not normalized.
 	private HashMap<Integer, Double> generateIssueWeights(Domain domain){
-		//Parameters
+		//The parameters a and b are can be modified in order to impact how much weight that should be added to each issue.
+		//We found that adding a higher weight to issue values within a bid of high utility gave a more accurate estimation
+		//of the utility space. The following values of a and b are derived through testing
 		double a=1;
 		double b=3;
 		
@@ -132,7 +134,9 @@ public class Uncertainty_Helper {
 //		We give each issueValue a rank. The first value seen for an issue has rank 1, the second
 //			unique value has rank 2 etc.
 		HashMap<Integer, HashMap<ValueDiscrete, Integer>> allValueRanks = new HashMap<Integer,HashMap<ValueDiscrete, Integer>>();
-		//parameters to experiment with
+		//The parameters a and b are can be modified in order to impact how much weight that should be added to each issue.
+		//We found that adding a higher weight to issue values within a bid of high utility gave a more accurate estimation
+		//of the utility space. The following values of a and b are derived through testing
 		int b=5; //first value
 		int a=1;
 		
